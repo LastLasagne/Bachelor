@@ -1,0 +1,12 @@
+﻿[mcp_servers.unity]
+command = 'C:\Users\doppe\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
+args = ['C:\Uni\Semester7\Project\Unity\Bachelor\Tools\unity-mcp-server\src\index.js']
+cwd = 'C:\Uni\Semester7\Project\Unity\Bachelor\Tools\unity-mcp-server'
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.unity.env]
+UNITY_HUB_PATH = 'C:\Program Files\Unity Hub\Unity Hub.exe'
+UNITY_BRIDGE_HOST = '127.0.0.1'
+UNITY_BRIDGE_PORT = '7890'
