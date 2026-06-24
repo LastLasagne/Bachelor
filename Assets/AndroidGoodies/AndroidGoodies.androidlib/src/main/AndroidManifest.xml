@@ -1,0 +1,32 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<application
+		android:allowBackup="true"
+		android:supportsRtl="true">
+
+		<receiver android:name="com.deadmosquitogames.notifications.GoodiesNotificationManager"/>
+		<receiver android:name="com.deadmosquitogames.notifications.NotificationManagerModern"/>
+
+		<provider
+			android:name="com.deadmosquitogames.multipicker.utils.AMPFileProvider"
+			android:authorities="${applicationId}.multipicker.fileprovider"
+			android:exported="false"
+			android:grantUriPermissions="true">
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:exported="false"
+				android:grantUriPermissions="true"
+				android:resource="@xml/paths" />
+		</provider>
+
+		<activity android:name="com.deadmosquitogames.AndroidGoodiesActivity"
+			android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+
+		<activity android:name="com.deadmosquitogames.notifications.NotificationsIntermediateActivity"
+			android:launchMode="singleTask"
+			android:taskAffinity=""
+			android:excludeFromRecents="true"
+			android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+	</application>
+
+</manifest>
