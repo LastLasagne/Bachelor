@@ -1601,6 +1601,7 @@ GameObject:
   - component: {fileID: 334784199}
   - component: {fileID: 334784198}
   - component: {fileID: 334784201}
+  - component: {fileID: 334784202}
   m_Layer: 0
   m_Name: Quest Menu System
   m_TagString: Untagged
@@ -1822,8 +1823,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestCameraCaptureCoordinator
   editorSimulationPanel: {fileID: 923527302}
+  photoCaptureRequested: {fileID: 11400000, guid: 8a6ab26509fcba846bfbfe7177ad089d, type: 2}
   photoCaptured: {fileID: 11400000, guid: d1c489a732f21e743a6c74b9fe542c2b, type: 2}
   photoCaptureCancelled: {fileID: 11400000, guid: 3be29bd2182cca544be07369926e79c7, type: 2}
+  photoUploader: {fileID: 334784202}
+  firebaseQuestId: unknown_quest
+  firebaseHubId: quest_hub
+  uploadProgressPanel: {fileID: 0}
+  uploadProgressMessage: {fileID: 0}
+  uploadProgressText: 'Uploading picture...
+
+    Please stay on this screen.'
+--- !u!114 &334784202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334784196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff3fb9311568594382bb967b8b166a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestPhotoFirebaseUploader
+  photoCollection: questPhotos
+  storageRootFolder: questPhotos
+  defaultQuestId: unknown_quest
+  defaultHubId: quest_hub
+  editorTestPhotoPath: 
 --- !u!1 &348306382
 GameObject:
   m_ObjectHideFlags: 0

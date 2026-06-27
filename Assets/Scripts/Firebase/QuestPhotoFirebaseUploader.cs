@@ -42,18 +42,41 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
             return;
         }
 
-        if (!File.Exists(localPhotoPath))
+        string resolvedPhotoPath = ResolveLocalFilePath(localPhotoPath);
+        if (!File.Exists(resolvedPhotoPath))
         {
-            Debug.LogWarning($"Cannot upload quest photo because the file does not exist: {localPhotoPath}", this);
+            Debug.LogWarning(
+                $"Cannot upload quest photo because the file does not exist. " +
+                $"Original path: {localPhotoPath}. Resolved path: {resolvedPhotoPath}",
+                this);
+            return;
+        }
+
+        byte[] photoBytes;
+        try
+        {
+            photoBytes = File.ReadAllBytes(resolvedPhotoPath);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"Cannot read quest photo bytes from {resolvedPhotoPath}: {exception}", this);
+            return;
+        }
+
+        if (photoBytes.Length == 0)
+        {
+            Debug.LogWarning($"Cannot upload quest photo because the file is empty: {resolvedPhotoPath}", this);
             return;
         }
 
         try
         {
+            Debug.Log($"Preparing Firebase upload. Path: {resolvedPhotoPath}. Bytes: {photoBytes.Length}.", this);
             var user = await FirebaseGameServices.EnsureSignedInAnonymouslyAsync();
 
             string photoId = Guid.NewGuid().ToString("N");
             string safeQuestId = ToFirebasePathSegment(questId, defaultQuestId);
+            string safeHubId = string.IsNullOrWhiteSpace(hubId) ? defaultHubId : hubId.Trim();
             string storagePath = $"{storageRootFolder}/{safeQuestId}/{photoId}.jpg";
 
             StorageReference photoReference = FirebaseGameServices.Storage.RootReference.Child(storagePath);
@@ -62,14 +85,14 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
                 ContentType = "image/jpeg"
             };
 
-            Debug.Log($"Uploading quest photo to Firebase Storage: {storagePath}", this);
-            StorageMetadata storageMetadata = await photoReference.PutFileAsync(localPhotoPath, metadata);
+            Debug.Log($"Uploading quest photo to Firebase Storage: {storagePath}. User: {user.UserId}", this);
+            StorageMetadata storageMetadata = await photoReference.PutBytesAsync(photoBytes, metadata);
 
             Dictionary<string, object> photoData = new Dictionary<string, object>
             {
                 { "photoId", photoId },
                 { "questId", safeQuestId },
-                { "hubId", string.IsNullOrWhiteSpace(hubId) ? defaultHubId : hubId },
+                { "hubId", safeHubId },
                 { "uploaderId", user.UserId },
                 { "storagePath", storagePath },
                 { "contentType", storageMetadata.ContentType },
@@ -81,6 +104,7 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
                 { "createdAt", FieldValue.ServerTimestamp }
             };
 
+            Debug.Log($"Writing quest photo metadata to Firestore: {photoCollection}/{photoId}", this);
             await FirebaseGameServices.Firestore
                 .Collection(photoCollection)
                 .Document(photoId)
@@ -94,6 +118,25 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
         }
     }
 
+    private static string ResolveLocalFilePath(string localPhotoPath)
+    {
+        string trimmedPath = localPhotoPath.Trim().Trim('"');
+
+        if (trimmedPath.StartsWith("file://", StringComparison.OrdinalIgnoreCase) &&
+            Uri.TryCreate(trimmedPath, UriKind.Absolute, out Uri fileUri))
+        {
+            trimmedPath = fileUri.LocalPath;
+        }
+
+        if (File.Exists(trimmedPath))
+        {
+            return trimmedPath;
+        }
+
+        string unescapedPath = Uri.UnescapeDataString(trimmedPath);
+        return File.Exists(unescapedPath) ? unescapedPath : trimmedPath;
+    }
+
     private static string ToFirebasePathSegment(string value, string fallback)
     {
         string segment = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
@@ -104,4 +147,3 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
             .Replace("?", "_");
     }
 }
-
