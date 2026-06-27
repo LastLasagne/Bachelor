@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "108144667601",
+    "project_id": "animal-x-ing",
+    "storage_bucket": "animal-x-ing.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108144667601:android:d4fb9ab507e19b164acef0",
+        "android_client_info": {
+          "package_name": "com.LastLasagne.AnimalXing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASdXMvUVd9j0g6TU7nxhy_Z6Q-uPKa84w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

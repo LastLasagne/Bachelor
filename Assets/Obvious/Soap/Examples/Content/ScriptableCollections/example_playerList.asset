@@ -1,18 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 32
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5768c59cc2f9eb84fab620f5678dfb99, type: 3}
-  m_Name: example_playerList
-  m_EditorClassIdentifier: 
-  TagIndex: 0
-  Description: 
-  _resetOn: 0
-  _list: []
+version https://git-lfs.github.com/spec/v1
+oid sha256:5707a4c66d92e178049c4c28563c741646898d7306b46aa40612783090f8f989
+size 464

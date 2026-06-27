@@ -1,24 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: feefce10467f6394d81da2717c129df0, type: 3}
-  m_Name: scriptable_save_example
-  m_EditorClassIdentifier: 
-  TagIndex: 0
-  Description: 
-  _debugLogEnabled: 0
-  _loadMode: 1
-  _saveMode: 0
-  _secondsBetweenSave: 120
-  _saveData:
-    Version: 1
-    Level: 0
-    Items: []
+version https://git-lfs.github.com/spec/v1
+oid sha256:df8f77a44ec2a1a9eb56f056f5672757ab58da8be9179642a317b3d652826c7b
+size 576

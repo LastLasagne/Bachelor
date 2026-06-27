@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id">
+  <string name="gcm_defaultSenderId" translatable="false">108144667601</string>
+  <string name="google_storage_bucket" translatable="false">animal-x-ing.firebasestorage.app</string>
+  <string name="project_id" translatable="false">animal-x-ing</string>
+  <string name="google_api_key" translatable="false">AIzaSyASdXMvUVd9j0g6TU7nxhy_Z6Q-uPKa84w</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyASdXMvUVd9j0g6TU7nxhy_Z6Q-uPKa84w</string>
+  <string name="google_app_id" translatable="false">1:108144667601:android:d4fb9ab507e19b164acef0</string>
+</resources>
