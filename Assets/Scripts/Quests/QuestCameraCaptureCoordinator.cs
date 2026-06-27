@@ -1,4 +1,4 @@
-using DeadMosquito.AndroidGoodies;
+﻿using DeadMosquito.AndroidGoodies;
 using Obvious.Soap;
 using UnityEngine;
 
@@ -7,6 +7,9 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
     [SerializeField] private GameObject editorSimulationPanel;
     [SerializeField] private ScriptableEventNoParam photoCaptured;
     [SerializeField] private ScriptableEventNoParam photoCaptureCancelled;
+    [SerializeField] private QuestPhotoFirebaseUploader photoUploader;
+    [SerializeField] private string firebaseQuestId = "unknown_quest";
+    [SerializeField] private string firebaseHubId = "quest_hub";
 
     private bool captureInProgress;
 
@@ -82,6 +85,7 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
                     $"Local path: {LastCapturedPhotoPath}",
                     this);
 
+                UploadLastCapturedPhoto();
                 photoCaptured?.Raise();
             },
             error =>
@@ -110,4 +114,21 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
         LastCapturedPhotoPath = string.Empty;
         editorSimulationPanel?.SetActive(false);
     }
+
+    private void UploadLastCapturedPhoto()
+    {
+        if (photoUploader == null)
+        {
+            photoUploader = GetComponent<QuestPhotoFirebaseUploader>();
+        }
+
+        if (photoUploader == null)
+        {
+            photoUploader = gameObject.AddComponent<QuestPhotoFirebaseUploader>();
+        }
+
+        _ = photoUploader.UploadPhotoAsync(LastCapturedPhotoPath, firebaseQuestId, firebaseHubId);
+    }
 }
+
+
