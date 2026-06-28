@@ -13,7 +13,11 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     [Header("Firebase")]
     [SerializeField] private string photoCollection = "questPhotos";
     [SerializeField] private string visibleStatus = "visible";
+    [SerializeField] private string positiveCompletedStatus = "positive_completed";
+    [SerializeField] private string negativeCompletedStatus = "negative_completed";
     [SerializeField, Min(1)] private int maxDocumentsToSample = 50;
+    [SerializeField, Min(1)] private int positiveReactionThreshold = 3;
+    [SerializeField, Min(1)] private int negativeReactionThreshold = 3;
 
     [Header("Progression")]
     [SerializeField] private IntVariable viewedPhotoProgression;
@@ -26,16 +30,18 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     [SerializeField] private GameObject galleryPanel;
     [SerializeField] private RawImage photoImage;
     [SerializeField] private Button photoButton;
+    [SerializeField] private Button thumbsUpButton;
+    [SerializeField] private Button thumbsDownButton;
     [SerializeField] private Text statusText;
     [SerializeField] private Text counterText;
     [SerializeField] private Button closeButton;
 
-    private readonly List<string> storagePaths = new List<string>();
-    private readonly Queue<string> shuffledStorageQueue = new Queue<string>();
+    private readonly List<GalleryPhotoEntry> photoEntries = new List<GalleryPhotoEntry>();
+    private readonly Queue<GalleryPhotoEntry> shuffledPhotoQueue = new Queue<GalleryPhotoEntry>();
     private readonly System.Random random = new System.Random();
     private bool isOpen;
     private bool isLoading;
-    private string currentStoragePath;
+    private GalleryPhotoEntry currentPhoto;
 
     private void Awake()
     {
@@ -47,7 +53,17 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     {
         if (photoButton != null)
         {
-            photoButton.onClick.AddListener(HandlePhotoClicked);
+            photoButton.interactable = false;
+        }
+
+        if (thumbsUpButton != null)
+        {
+            thumbsUpButton.onClick.AddListener(HandleThumbsUpClicked);
+        }
+
+        if (thumbsDownButton != null)
+        {
+            thumbsDownButton.onClick.AddListener(HandleThumbsDownClicked);
         }
 
         if (closeButton != null)
@@ -58,9 +74,14 @@ public class FirebasePhotoGalleryController : MonoBehaviour
 
     private void OnDisable()
     {
-        if (photoButton != null)
+        if (thumbsUpButton != null)
         {
-            photoButton.onClick.RemoveListener(HandlePhotoClicked);
+            thumbsUpButton.onClick.RemoveListener(HandleThumbsUpClicked);
+        }
+
+        if (thumbsDownButton != null)
+        {
+            thumbsDownButton.onClick.RemoveListener(HandleThumbsDownClicked);
         }
 
         if (closeButton != null)
@@ -91,26 +112,57 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     public void CloseGallery()
     {
         isOpen = false;
-        currentStoragePath = string.Empty;
+        currentPhoto = default;
         SetPhotoTexture(null);
         SetPanelVisible(false);
     }
 
-    private async void HandlePhotoClicked()
+    private async void HandleThumbsUpClicked()
     {
-        if (!isOpen || isLoading || string.IsNullOrEmpty(currentStoragePath))
+        await ReactToCurrentPhotoAsync(true);
+    }
+
+    private async void HandleThumbsDownClicked()
+    {
+        await ReactToCurrentPhotoAsync(false);
+    }
+
+    private async Task ReactToCurrentPhotoAsync(bool isPositive)
+    {
+        if (!isOpen || isLoading || !currentPhoto.IsValid)
         {
             return;
         }
 
-        if (viewedPhotoProgression != null)
+        isLoading = true;
+        SetReactionButtonsInteractable(false);
+        SetStatus("Saving reaction...");
+
+        try
         {
-            viewedPhotoProgression.Add(progressionValuePerPhoto);
+            bool reactionSaved = await SaveReactionAsync(currentPhoto, isPositive);
+            if (reactionSaved && viewedPhotoProgression != null)
+            {
+                viewedPhotoProgression.Add(progressionValuePerPhoto);
+            }
+
+            UpdateCounterText();
+            SetPhotoTexture(null);
+            currentPhoto = default;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"Photo gallery failed to save reaction: {exception}", this);
+            SetStatus("Could not save reaction.");
+            SetReactionButtonsInteractable(true);
+            return;
+        }
+        finally
+        {
+            isLoading = false;
         }
 
-        UpdateCounterText();
-        SetPhotoTexture(null);
-        await LoadNextPhotoAsync(refreshList: shuffledStorageQueue.Count == 0);
+        await LoadNextPhotoAsync(refreshList: shuffledPhotoQueue.Count == 0);
     }
 
     private async Task LoadNextPhotoAsync(bool refreshList)
@@ -121,34 +173,34 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         }
 
         isLoading = true;
-        currentStoragePath = string.Empty;
+        currentPhoto = default;
         SetStatus("Loading picture...");
-        SetPhotoButtonInteractable(false);
+        SetReactionButtonsInteractable(false);
 
         try
         {
             await FirebaseGameServices.EnsureSignedInAnonymouslyAsync();
 
-            if (refreshList || shuffledStorageQueue.Count == 0)
+            if (refreshList || shuffledPhotoQueue.Count == 0)
             {
                 await RefreshPhotoListAsync();
             }
 
-            while (shuffledStorageQueue.Count > 0)
+            while (shuffledPhotoQueue.Count > 0)
             {
-                currentStoragePath = shuffledStorageQueue.Dequeue();
-                Texture2D texture = await DownloadTextureAsync(currentStoragePath);
+                currentPhoto = shuffledPhotoQueue.Dequeue();
+                Texture2D texture = await DownloadTextureAsync(currentPhoto.StoragePath);
 
                 if (texture == null)
                 {
-                    storagePaths.Remove(currentStoragePath);
-                    currentStoragePath = string.Empty;
+                    photoEntries.RemoveAll(entry => entry.DocumentId == currentPhoto.DocumentId);
+                    currentPhoto = default;
                     continue;
                 }
 
                 SetPhotoTexture(texture);
-                SetStatus("Tap the picture to continue.");
-                SetPhotoButtonInteractable(true);
+                SetStatus("React to this picture.");
+                SetReactionButtonsInteractable(true);
                 return;
             }
 
@@ -166,11 +218,13 @@ public class FirebasePhotoGalleryController : MonoBehaviour
             isLoading = false;
         }
     }
+
     private async Task RefreshPhotoListAsync()
     {
-        storagePaths.Clear();
-        shuffledStorageQueue.Clear();
+        photoEntries.Clear();
+        shuffledPhotoQueue.Clear();
 
+        var user = await FirebaseGameServices.EnsureSignedInAnonymouslyAsync();
         Query query = FirebaseGameServices.Firestore
             .Collection(photoCollection)
             .WhereEqualTo("status", visibleStatus)
@@ -179,10 +233,22 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         QuerySnapshot snapshot = await query.GetSnapshotAsync();
         foreach (DocumentSnapshot document in snapshot.Documents)
         {
-            if (document.TryGetValue("storagePath", out string storagePath) && !string.IsNullOrWhiteSpace(storagePath))
+            if (!document.TryGetValue("storagePath", out string storagePath) || string.IsNullOrWhiteSpace(storagePath))
             {
-                storagePaths.Add(storagePath);
+                continue;
             }
+
+            if (document.TryGetValue("uploaderId", out string uploaderId) && uploaderId == user.UserId)
+            {
+                continue;
+            }
+
+            if (HasUserReacted(document, user.UserId))
+            {
+                continue;
+            }
+
+            photoEntries.Add(new GalleryPhotoEntry(document.Id, storagePath));
         }
 
         ShuffleStorageQueue();
@@ -190,18 +256,111 @@ public class FirebasePhotoGalleryController : MonoBehaviour
 
     private void ShuffleStorageQueue()
     {
-        shuffledStorageQueue.Clear();
+        shuffledPhotoQueue.Clear();
 
-        List<string> shuffled = new List<string>(storagePaths);
+        List<GalleryPhotoEntry> shuffled = new List<GalleryPhotoEntry>(photoEntries);
         for (int i = shuffled.Count - 1; i > 0; i--)
         {
             int j = random.Next(i + 1);
             (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]);
         }
 
-        foreach (string storagePath in shuffled)
+        foreach (GalleryPhotoEntry entry in shuffled)
         {
-            shuffledStorageQueue.Enqueue(storagePath);
+            shuffledPhotoQueue.Enqueue(entry);
+        }
+    }
+
+    private async Task<bool> SaveReactionAsync(GalleryPhotoEntry photo, bool isPositive)
+    {
+        var user = await FirebaseGameServices.EnsureSignedInAnonymouslyAsync();
+        DocumentReference photoDocument = FirebaseGameServices.Firestore.Collection(photoCollection).Document(photo.DocumentId);
+        DocumentSnapshot snapshot = await photoDocument.GetSnapshotAsync();
+        if (!snapshot.Exists)
+        {
+            return false;
+        }
+
+        if (snapshot.TryGetValue("uploaderId", out string uploaderId) && uploaderId == user.UserId)
+        {
+            Debug.Log("Ignoring gallery reaction because the current player uploaded this photo.", this);
+            return false;
+        }
+
+        Dictionary<string, object> reactions = ReadReactionMap(snapshot);
+        if (reactions.ContainsKey(user.UserId))
+        {
+            Debug.Log("Ignoring duplicate gallery reaction from this player.", this);
+            return false;
+        }
+
+        int thumbsUp = ReadInt(snapshot, "thumbsUp");
+        int thumbsDown = ReadInt(snapshot, "thumbsDown");
+        if (isPositive)
+        {
+            thumbsUp++;
+            reactions[user.UserId] = "up";
+        }
+        else
+        {
+            thumbsDown++;
+            reactions[user.UserId] = "down";
+        }
+
+        int reactionCount = thumbsUp + thumbsDown;
+
+        Dictionary<string, object> updates = new Dictionary<string, object>
+        {
+            { "thumbsUp", thumbsUp },
+            { "thumbsDown", thumbsDown },
+            { "reactionCount", reactionCount },
+            { "reactions", reactions },
+            { "lastReactionAt", FieldValue.ServerTimestamp }
+        };
+
+        if (thumbsUp >= positiveReactionThreshold)
+        {
+            updates["status"] = positiveCompletedStatus;
+            updates["completedReason"] = "positive";
+            updates["completedAt"] = FieldValue.ServerTimestamp;
+            await photoDocument.UpdateAsync(updates);
+            await DeletePositiveCompletedPhotoAsync(photoDocument, photo.StoragePath);
+            return true;
+        }
+
+        if (thumbsDown >= negativeReactionThreshold)
+        {
+            updates["status"] = negativeCompletedStatus;
+            updates["completedReason"] = "negative";
+            updates["negativeNoticeDismissed"] = false;
+            updates["completedAt"] = FieldValue.ServerTimestamp;
+        }
+
+        await photoDocument.UpdateAsync(updates);
+        return true;
+    }
+
+    private async Task DeletePositiveCompletedPhotoAsync(DocumentReference photoDocument, string storagePath)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(storagePath))
+            {
+                await FirebaseGameServices.Storage.RootReference.Child(storagePath).DeleteAsync();
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"Positive completed photo is hidden, but Storage deletion failed for {storagePath}: {exception.Message}", this);
+        }
+
+        try
+        {
+            await photoDocument.DeleteAsync();
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"Positive completed photo is hidden, but Firestore deletion failed: {exception.Message}", this);
         }
     }
 
@@ -247,174 +406,53 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         return completionSource.Task;
     }
 
-    private static int ReadJpegExifOrientation(byte[] bytes)
+    private static bool HasUserReacted(DocumentSnapshot document, string userId)
     {
-        if (bytes.Length < 4 || bytes[0] != 0xff || bytes[1] != 0xd8)
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            return 1;
+            return false;
         }
 
-        int offset = 2;
-        while (offset + 4 <= bytes.Length)
-        {
-            if (bytes[offset] != 0xff)
-            {
-                break;
-            }
-
-            byte marker = bytes[offset + 1];
-            int segmentLength = ReadUInt16BigEndian(bytes, offset + 2);
-            if (segmentLength < 2 || offset + 2 + segmentLength > bytes.Length)
-            {
-                break;
-            }
-
-            if (marker == 0xe1 && segmentLength >= 8 && IsExifHeader(bytes, offset + 4))
-            {
-                return ReadTiffOrientation(bytes, offset + 10, offset + 2 + segmentLength);
-            }
-
-            offset += 2 + segmentLength;
-        }
-
-        return 1;
+        return ReadReactionMap(document).ContainsKey(userId);
     }
 
-    private static bool IsExifHeader(byte[] bytes, int offset)
+    private static bool IsOwnedByCurrentPlayer(DocumentSnapshot document, string authUserId, string localPlayerId)
     {
-        return offset + 6 <= bytes.Length &&
-               bytes[offset] == (byte)'E' &&
-               bytes[offset + 1] == (byte)'x' &&
-               bytes[offset + 2] == (byte)'i' &&
-               bytes[offset + 3] == (byte)'f' &&
-               bytes[offset + 4] == 0 &&
-               bytes[offset + 5] == 0;
+        if (!string.IsNullOrWhiteSpace(authUserId) &&
+            document.TryGetValue("uploaderId", out string uploaderId) &&
+            uploaderId == authUserId)
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(localPlayerId) &&
+               document.TryGetValue("uploaderPlayerId", out string uploaderPlayerId) &&
+               uploaderPlayerId == localPlayerId;
     }
 
-    private static int ReadTiffOrientation(byte[] bytes, int tiffStart, int segmentEnd)
+    private static Dictionary<string, object> ReadReactionMap(DocumentSnapshot document)
     {
-        if (tiffStart + 8 > segmentEnd)
+        if (document.TryGetValue("reactions", out Dictionary<string, object> reactions) && reactions != null)
         {
-            return 1;
+            return new Dictionary<string, object>(reactions);
         }
 
-        bool littleEndian = bytes[tiffStart] == 0x49 && bytes[tiffStart + 1] == 0x49;
-        bool bigEndian = bytes[tiffStart] == 0x4d && bytes[tiffStart + 1] == 0x4d;
-        if (!littleEndian && !bigEndian)
-        {
-            return 1;
-        }
-
-        int firstIfdOffset = ReadUInt32(bytes, tiffStart + 4, littleEndian);
-        int ifdStart = tiffStart + firstIfdOffset;
-        if (ifdStart + 2 > segmentEnd)
-        {
-            return 1;
-        }
-
-        int entryCount = ReadUInt16(bytes, ifdStart, littleEndian);
-        for (int i = 0; i < entryCount; i++)
-        {
-            int entryOffset = ifdStart + 2 + i * 12;
-            if (entryOffset + 12 > segmentEnd)
-            {
-                break;
-            }
-
-            int tag = ReadUInt16(bytes, entryOffset, littleEndian);
-            if (tag == 0x0112)
-            {
-                return ReadUInt16(bytes, entryOffset + 8, littleEndian);
-            }
-        }
-
-        return 1;
+        return new Dictionary<string, object>();
     }
 
-    private static int ReadUInt16BigEndian(byte[] bytes, int offset)
+    private static int ReadInt(DocumentSnapshot document, string field)
     {
-        return (bytes[offset] << 8) | bytes[offset + 1];
-    }
-
-    private static int ReadUInt16(byte[] bytes, int offset, bool littleEndian)
-    {
-        return littleEndian
-            ? bytes[offset] | (bytes[offset + 1] << 8)
-            : (bytes[offset] << 8) | bytes[offset + 1];
-    }
-
-    private static int ReadUInt32(byte[] bytes, int offset, bool littleEndian)
-    {
-        return littleEndian
-            ? bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16) | (bytes[offset + 3] << 24)
-            : (bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
-    }
-
-    private static Texture2D ApplyExifOrientation(Texture2D source, int orientation)
-    {
-        if (orientation == 1)
+        if (document.TryGetValue(field, out int intValue))
         {
-            return source;
+            return intValue;
         }
 
-        Color32[] sourcePixels = source.GetPixels32();
-        int sourceWidth = source.width;
-        int sourceHeight = source.height;
-
-        bool swapsDimensions = orientation == 5 || orientation == 6 || orientation == 7 || orientation == 8;
-        int targetWidth = swapsDimensions ? sourceHeight : sourceWidth;
-        int targetHeight = swapsDimensions ? sourceWidth : sourceHeight;
-        Color32[] targetPixels = new Color32[targetWidth * targetHeight];
-
-        for (int y = 0; y < sourceHeight; y++)
+        if (document.TryGetValue(field, out long longValue))
         {
-            for (int x = 0; x < sourceWidth; x++)
-            {
-                int targetX;
-                int targetY;
-                switch (orientation)
-                {
-                    case 2:
-                        targetX = sourceWidth - 1 - x;
-                        targetY = y;
-                        break;
-                    case 3:
-                        targetX = sourceWidth - 1 - x;
-                        targetY = sourceHeight - 1 - y;
-                        break;
-                    case 4:
-                        targetX = x;
-                        targetY = sourceHeight - 1 - y;
-                        break;
-                    case 5:
-                        targetX = y;
-                        targetY = x;
-                        break;
-                    case 6:
-                        targetX = sourceHeight - 1 - y;
-                        targetY = x;
-                        break;
-                    case 7:
-                        targetX = sourceHeight - 1 - y;
-                        targetY = sourceWidth - 1 - x;
-                        break;
-                    case 8:
-                        targetX = y;
-                        targetY = sourceWidth - 1 - x;
-                        break;
-                    default:
-                        return source;
-                }
-
-                targetPixels[targetY * targetWidth + targetX] = sourcePixels[y * sourceWidth + x];
-            }
+            return (int)longValue;
         }
 
-        Texture2D oriented = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
-        oriented.SetPixels32(targetPixels);
-        oriented.Apply();
-        Destroy(source);
-        return oriented;
+        return 0;
     }
 
     private bool ValidateGalleryReferences()
@@ -422,6 +460,8 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         bool hasRequiredReferences = galleryPanel != null &&
                                      photoImage != null &&
                                      photoButton != null &&
+                                     thumbsUpButton != null &&
+                                     thumbsDownButton != null &&
                                      statusText != null &&
                                      counterText != null &&
                                      closeButton != null;
@@ -433,6 +473,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
 
         return hasRequiredReferences;
     }
+
     private void SetPanelVisible(bool visible)
     {
         galleryPanel?.SetActive(visible);
@@ -479,15 +520,25 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         {
             photoRect.localRotation = Quaternion.Euler(0f, 0f, landscapePhotoRotationDegrees);
         }
-        
+
         aspectRatioFitter.aspectRatio = texture.width / (float)texture.height;
     }
 
-    private void SetPhotoButtonInteractable(bool interactable)
+    private void SetReactionButtonsInteractable(bool interactable)
     {
         if (photoButton != null)
         {
-            photoButton.interactable = interactable;
+            photoButton.interactable = false;
+        }
+
+        if (thumbsUpButton != null)
+        {
+            thumbsUpButton.interactable = interactable;
+        }
+
+        if (thumbsDownButton != null)
+        {
+            thumbsDownButton.interactable = interactable;
         }
     }
 
@@ -501,10 +552,20 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         int count = viewedPhotoProgression != null ? viewedPhotoProgression.Value : 0;
         counterText.text = $"Pictures viewed: {count}";
     }
+
+    private readonly struct GalleryPhotoEntry
+    {
+        public GalleryPhotoEntry(string documentId, string storagePath)
+        {
+            DocumentId = documentId;
+            StoragePath = storagePath;
+        }
+
+        public string DocumentId { get; }
+        public string StoragePath { get; }
+        public bool IsValid => !string.IsNullOrWhiteSpace(DocumentId) && !string.IsNullOrWhiteSpace(StoragePath);
+    }
 }
-
-
-
 
 
 

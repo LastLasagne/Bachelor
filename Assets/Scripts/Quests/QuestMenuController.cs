@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +12,7 @@ public class QuestMenuController : MonoBehaviour
     [SerializeField] private Text questProgressLabel;
     [SerializeField] private GameObject successHintPanel;
     [SerializeField] private Text successHintText;
+    [SerializeField] private FirebaseNegativePhotoNotificationController negativePhotoNotificationController;
 
     private readonly Dictionary<QuestDefinition, int> questProgress = new Dictionary<QuestDefinition, int>();
     private QuestDefinition currentQuest;
@@ -23,6 +24,7 @@ public class QuestMenuController : MonoBehaviour
     public Text QuestProgressLabel { get => questProgressLabel; set => questProgressLabel = value; }
     public GameObject SuccessHintPanel { get => successHintPanel; set => successHintPanel = value; }
     public Text SuccessHintText { get => successHintText; set => successHintText = value; }
+    public FirebaseNegativePhotoNotificationController NegativePhotoNotificationController { get => negativePhotoNotificationController; set => negativePhotoNotificationController = value; }
     public QuestDefinition CurrentQuest => currentQuest;
 
     private void Awake()
@@ -60,6 +62,7 @@ public class QuestMenuController : MonoBehaviour
         successHintPanel?.SetActive(false);
         menuPanel.SetActive(true);
         RefreshQuestDisplay();
+        negativePhotoNotificationController?.CheckForNegativePhotos(point);
     }
 
     // Invoked by SOAP's native EventListenerNoParam.
@@ -188,3 +191,6 @@ public class QuestMenuController : MonoBehaviour
         return builder.ToString();
     }
 }
+
+
+

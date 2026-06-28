@@ -73,6 +73,7 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
         {
             Debug.Log($"Preparing Firebase upload. Path: {resolvedPhotoPath}. Bytes: {photoBytes.Length}.", this);
             var user = await FirebaseGameServices.EnsureSignedInAnonymouslyAsync();
+            string localPlayerId = FirebasePlayerIdentity.LocalPlayerId;
 
             string photoId = Guid.NewGuid().ToString("N");
             string safeQuestId = ToFirebasePathSegment(questId, defaultQuestId);
@@ -85,7 +86,7 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
                 ContentType = "image/jpeg"
             };
 
-            Debug.Log($"Uploading quest photo to Firebase Storage: {storagePath}. User: {user.UserId}", this);
+            Debug.Log($"Uploading quest photo to Firebase Storage: {storagePath}. Auth user: {user.UserId}. Local player: {localPlayerId}", this);
             StorageMetadata storageMetadata = await photoReference.PutBytesAsync(photoBytes, metadata);
 
             Dictionary<string, object> photoData = new Dictionary<string, object>
@@ -147,3 +148,4 @@ public class QuestPhotoFirebaseUploader : MonoBehaviour
             .Replace("?", "_");
     }
 }
+
