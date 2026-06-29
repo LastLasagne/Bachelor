@@ -6,7 +6,7 @@ using Firebase.Firestore;
 using Firebase.Storage;
 using UnityEngine;
 
-public class QuestPhotoFirebaseUploader : MonoBehaviour
+public class FirebaseQuestPhotoUploader : MonoBehaviour
 {
     [Header("Firebase Paths")]
     [SerializeField] private string photoCollection = "questPhotos";

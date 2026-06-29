@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
-public class SoapInteractionButton : MonoBehaviour
+public class InteractionButton : MonoBehaviour
 {
     [SerializeField] private ScriptableEventNoParam interactPressed;
 

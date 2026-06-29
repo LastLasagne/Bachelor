@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class CozyThirdPersonController : MonoBehaviour
+public class ThirdPersonController : MonoBehaviour
 {
     [Header("Input")]
     [SerializeField] private MobileJoystick joystick;

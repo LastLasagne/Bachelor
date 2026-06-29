@@ -1,7 +1,7 @@
 using Obvious.Soap;
 using UnityEngine;
 
-public class SoapPlayerInteractionSensor : MonoBehaviour
+public class PlayerInteractionSensor : MonoBehaviour
 {
     [SerializeField] private float interactionRadius = 2.75f;
     [SerializeField] private LayerMask interactionLayers = ~0;

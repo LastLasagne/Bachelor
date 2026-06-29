@@ -10,7 +10,7 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
     [SerializeField] private ScriptableEventNoParam photoCaptureRequested;
     [SerializeField] private ScriptableEventNoParam photoCaptured;
     [SerializeField] private ScriptableEventNoParam photoCaptureCancelled;
-    [SerializeField] private QuestPhotoFirebaseUploader photoUploader;
+    [SerializeField] private FirebaseQuestPhotoUploader photoUploader;
     [SerializeField] private string firebaseQuestId = "unknown_quest";
     [SerializeField] private string firebaseHubId = "quest_hub";
 
@@ -170,12 +170,12 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
     {
         if (photoUploader == null)
         {
-            photoUploader = GetComponent<QuestPhotoFirebaseUploader>();
+            photoUploader = GetComponent<FirebaseQuestPhotoUploader>();
         }
 
         if (photoUploader == null)
         {
-            photoUploader = gameObject.AddComponent<QuestPhotoFirebaseUploader>();
+            photoUploader = gameObject.AddComponent<FirebaseQuestPhotoUploader>();
         }
 
         await photoUploader.UploadPhotoAsync(LastCapturedPhotoPath, firebaseQuestId, firebaseHubId);

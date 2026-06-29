@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
-public class SoapQuestActionButton : MonoBehaviour
+public class QuestActionButton : MonoBehaviour
 {
     [SerializeField] private ScriptableEventNoParam actionRequested;
 

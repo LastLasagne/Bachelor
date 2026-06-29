@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AnimalCrossingFollowCamera : MonoBehaviour
+public class FollowCamera : MonoBehaviour
 {
     [SerializeField] private Transform target;
 
