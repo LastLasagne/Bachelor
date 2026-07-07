@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Obvious.Soap;
 using UnityEngine;
 
@@ -95,7 +95,6 @@ public class FoodProgressionIslandActivator : MonoBehaviour
             if (collection != null)
             {
                 collection.name = BuildCollectionName(i + 1);
-                collection.transform.localPosition = GetCollectionLocalPosition(i);
                 EnsurePlaceholderContent(collection.transform, i);
             }
         }
@@ -191,11 +190,4 @@ public class FoodProgressionIslandActivator : MonoBehaviour
         return $"Food Progression Collection {index:00}";
     }
 
-    private static Vector3 GetCollectionLocalPosition(int index)
-    {
-        const float radius = 4.5f;
-        const float height = 0.25f;
-        float angle = index * Mathf.PI * 2f / DefaultCollectionCount;
-        return new Vector3(Mathf.Cos(angle) * radius, height, Mathf.Sin(angle) * radius);
-    }
 }
