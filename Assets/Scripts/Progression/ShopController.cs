@@ -13,6 +13,22 @@ public class ShopOffer
     public GameObject CollectionToActivate => collectionToActivate;
     public bool Purchased => purchased;
 
+    public ShopOffer()
+    {
+    }
+
+    public ShopOffer(ShopItemDefinition item, GameObject collectionToActivate)
+    {
+        this.item = item;
+        this.collectionToActivate = collectionToActivate;
+        purchased = false;
+    }
+
+    public bool HasSameItem(ShopItemDefinition otherItem)
+    {
+        return item != null && item == otherItem;
+    }
+
     public void MarkPurchased()
     {
         purchased = true;
@@ -40,6 +56,37 @@ public class ShopController : MonoBehaviour
     public MaterialResourceBank MaterialResourceBank { get => materialResourceBank; set => materialResourceBank = value; }
     public List<ShopOffer> Offers => offers;
 
+    public bool AddOffer(ShopOffer offer)
+    {
+        if (offer == null || offer.Item == null || ContainsOfferForItem(offer.Item))
+        {
+            return false;
+        }
+
+        offers.Add(new ShopOffer(offer.Item, offer.CollectionToActivate));
+
+        if (shopPanel != null && shopPanel.activeSelf)
+        {
+            RebuildShopList();
+            RefreshResourceAmount();
+        }
+
+        return true;
+    }
+
+    private bool ContainsOfferForItem(ShopItemDefinition item)
+    {
+        foreach (ShopOffer offer in offers)
+        {
+            if (offer != null && offer.HasSameItem(item))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void Awake()
     {
         runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
@@ -51,7 +98,7 @@ public class ShopController : MonoBehaviour
     {
         EnsureUi();
         shopPanel.SetActive(true);
-                SetHubMenuOpen(true);
+        SetHubMenuOpen(true);
         RebuildShopList();
         RefreshResourceAmount();
     }

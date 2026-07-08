@@ -89,7 +89,6 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         {
             closeButton.onClick.RemoveListener(CloseGallery);
         }
-
         SetHubMenuOpen(false);
     }
 
@@ -123,7 +122,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         if (!ValidateGalleryReferences())
         {
             isOpen = false;
-            SetHubMenuOpen(false);
+        SetHubMenuOpen(false);
             return;
         }
 
@@ -139,7 +138,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         currentPhoto = default;
         SetPhotoTexture(null);
         SetPanelVisible(false);
-    SetHubMenuOpen(false);
+        SetHubMenuOpen(false);
     }
 
     private async void HandleThumbsUpClicked()
