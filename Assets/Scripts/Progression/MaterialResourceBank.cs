@@ -12,6 +12,22 @@ public class MaterialResourceBank : ScriptableObject
         materialAmount = Mathf.Max(0, materialAmount + amount);
     }
 
+    public bool CanAfford(int amount)
+    {
+        return amount >= 0 && materialAmount >= amount;
+    }
+
+    public bool TrySpend(int amount)
+    {
+        if (!CanAfford(amount))
+        {
+            return false;
+        }
+
+        materialAmount -= amount;
+        return true;
+    }
+
     public void ResetAmount()
     {
         materialAmount = 0;
