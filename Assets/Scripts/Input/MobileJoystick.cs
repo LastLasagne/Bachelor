@@ -13,10 +13,11 @@ public class MobileJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, 
     private Canvas canvas;
     private Camera uiCamera;
     private Vector2 input;
+    private bool inputEnabled = true;
 
-    public Vector2 Input => input;
-    public float Horizontal => input.x;
-    public float Vertical => input.y;
+    public Vector2 Input => inputEnabled ? input : Vector2.zero;
+    public float Horizontal => Input.x;
+    public float Vertical => Input.y;
 
     private void Awake()
     {
@@ -39,12 +40,22 @@ public class MobileJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, 
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (!inputEnabled)
+        {
+            return;
+        }
+
         SetVisible(true);
         OnDrag(eventData);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
+        if (!inputEnabled)
+        {
+            return;
+        }
+
         if (background == null)
         {
             return;
@@ -75,7 +86,20 @@ public class MobileJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, 
     {
         input = Vector2.zero;
         ResetHandle();
-        SetVisible(!hideWhenReleased);
+        SetVisible(inputEnabled && !hideWhenReleased);
+    }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        inputEnabled = enabled;
+
+        if (!inputEnabled)
+        {
+            input = Vector2.zero;
+            ResetHandle();
+        }
+
+        SetVisible(inputEnabled && !hideWhenReleased);
     }
 
     private void ResetHandle()

@@ -40,6 +40,11 @@ public class InteractionButton : MonoBehaviour
 
     public void RaiseInteraction()
     {
+        if (HubMenuState.IsAnyHubMenuOpen)
+        {
+            return;
+        }
+
         if (interactPressed != null)
         {
             interactPressed.Raise();

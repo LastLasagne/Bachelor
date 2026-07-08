@@ -75,6 +75,11 @@ public class ThirdPersonController : MonoBehaviour
 
     private Vector2 ReadMoveInput()
     {
+        if (HubMenuState.IsAnyHubMenuOpen)
+        {
+            return Vector2.zero;
+        }
+
         Vector2 input = joystick != null ? joystick.Input : Vector2.zero;
 
         if (allowKeyboardFallback)

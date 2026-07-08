@@ -16,6 +16,12 @@ public class PlayerInteractionSensor : MonoBehaviour
 
     private void Update()
     {
+        if (HubMenuState.IsAnyHubMenuOpen)
+        {
+            SetFocus(null);
+            return;
+        }
+
         SetFocus(FindNearestInteractable());
     }
 
@@ -70,6 +76,11 @@ public class PlayerInteractionSensor : MonoBehaviour
     // Invoked by SOAP's native EventListenerNoParam.
     public void HandleInteractPressed()
     {
+        if (HubMenuState.IsAnyHubMenuOpen)
+        {
+            return;
+        }
+
         if (focusedInteractable != null)
         {
             interactionDispatched?.Raise(focusedInteractable.gameObject);

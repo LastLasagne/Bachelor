@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase.Firestore;
@@ -42,6 +42,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     private bool isOpen;
     private bool isLoading;
     private GalleryPhotoEntry currentPhoto;
+    private bool registeredAsOpenHubMenu;
 
     private void Awake()
     {
@@ -88,6 +89,27 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         {
             closeButton.onClick.RemoveListener(CloseGallery);
         }
+
+        SetHubMenuOpen(false);
+    }
+
+    private void SetHubMenuOpen(bool open)
+    {
+        if (registeredAsOpenHubMenu == open)
+        {
+            return;
+        }
+
+        registeredAsOpenHubMenu = open;
+
+        if (registeredAsOpenHubMenu)
+        {
+            HubMenuState.RegisterOpen(this);
+        }
+        else
+        {
+            HubMenuState.RegisterClosed(this);
+        }
     }
 
     public async void OpenGallery()
@@ -101,10 +123,12 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         if (!ValidateGalleryReferences())
         {
             isOpen = false;
+            SetHubMenuOpen(false);
             return;
         }
 
         SetPanelVisible(true);
+        SetHubMenuOpen(true);
         UpdateCounterText();
         await LoadNextPhotoAsync(refreshList: true);
     }
@@ -115,6 +139,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         currentPhoto = default;
         SetPhotoTexture(null);
         SetPanelVisible(false);
+    SetHubMenuOpen(false);
     }
 
     private async void HandleThumbsUpClicked()

@@ -35,6 +35,7 @@ public class ShopController : MonoBehaviour
 
     private readonly List<GameObject> spawnedRows = new List<GameObject>();
     private Font runtimeFont;
+    private bool registeredAsOpenHubMenu;
 
     public MaterialResourceBank MaterialResourceBank { get => materialResourceBank; set => materialResourceBank = value; }
     public List<ShopOffer> Offers => offers;
@@ -50,6 +51,7 @@ public class ShopController : MonoBehaviour
     {
         EnsureUi();
         shopPanel.SetActive(true);
+                SetHubMenuOpen(true);
         RebuildShopList();
         RefreshResourceAmount();
     }
@@ -59,6 +61,32 @@ public class ShopController : MonoBehaviour
         if (shopPanel != null)
         {
             shopPanel.SetActive(false);
+        }
+
+        SetHubMenuOpen(false);
+    }
+
+    private void OnDisable()
+    {
+        SetHubMenuOpen(false);
+    }
+
+    private void SetHubMenuOpen(bool open)
+    {
+        if (registeredAsOpenHubMenu == open)
+        {
+            return;
+        }
+
+        registeredAsOpenHubMenu = open;
+
+        if (registeredAsOpenHubMenu)
+        {
+            HubMenuState.RegisterOpen(this);
+        }
+        else
+        {
+            HubMenuState.RegisterClosed(this);
         }
     }
 

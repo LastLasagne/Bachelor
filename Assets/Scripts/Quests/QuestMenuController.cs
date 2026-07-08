@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +16,7 @@ public class QuestMenuController : MonoBehaviour
 
     private readonly Dictionary<QuestDefinition, int> questProgress = new Dictionary<QuestDefinition, int>();
     private QuestDefinition currentQuest;
+    private bool registeredAsOpenHubMenu;
 
     public GameObject MenuPanel { get => menuPanel; set => menuPanel = value; }
     public Text MenuTitle { get => menuTitle; set => menuTitle = value; }
@@ -61,6 +62,7 @@ public class QuestMenuController : MonoBehaviour
 
         successHintPanel?.SetActive(false);
         menuPanel.SetActive(true);
+        SetHubMenuOpen(true);
         RefreshQuestDisplay();
         negativePhotoNotificationController?.CheckForNegativePhotos(point);
     }
@@ -137,7 +139,32 @@ public class QuestMenuController : MonoBehaviour
     {
         successHintPanel?.SetActive(false);
         menuPanel?.SetActive(false);
+        SetHubMenuOpen(false);
         currentQuest = null;
+    }
+
+    private void OnDisable()
+    {
+        SetHubMenuOpen(false);
+    }
+
+    private void SetHubMenuOpen(bool open)
+    {
+        if (registeredAsOpenHubMenu == open)
+        {
+            return;
+        }
+
+        registeredAsOpenHubMenu = open;
+
+        if (registeredAsOpenHubMenu)
+        {
+            HubMenuState.RegisterOpen(this);
+        }
+        else
+        {
+            HubMenuState.RegisterClosed(this);
+        }
     }
 
     private void RefreshQuestDisplay()
