@@ -269,13 +269,14 @@ public class TrashProgressionIslandController : MonoBehaviour
 
     private void EnsureTrashGroup(Transform trashRoot, string groupName, Vector3 localPosition)
     {
-        Transform group = FindOrCreateChild(trashRoot, groupName);
-        group.localPosition = localPosition;
+        Transform group = FindOrCreateChild(trashRoot, groupName, out bool wasCreated);
+        if (wasCreated)
+        {
+            group.localPosition = localPosition;
+        }
 
         if (group.childCount > 0)
-        {
-            RemovePlaceholderColliders(group);
-            return;
+        {            return;
         }
 
         AddTrashPlaceholder(group, "Trash Bag", PrimitiveType.Capsule, new Vector3(-0.45f, 0.35f, 0f), new Vector3(0.35f, 0.35f, 0.35f));
@@ -285,12 +286,19 @@ public class TrashProgressionIslandController : MonoBehaviour
 
     private static Transform FindOrCreateChild(Transform parent, string childName)
     {
+        return FindOrCreateChild(parent, childName, out _);
+    }
+
+    private static Transform FindOrCreateChild(Transform parent, string childName, out bool wasCreated)
+    {
         Transform child = parent.Find(childName);
         if (child != null)
         {
+            wasCreated = false;
             return child;
         }
 
+        wasCreated = true;
         var childObject = new GameObject(childName);
 #if UNITY_EDITOR
         if (!Application.isPlaying)
