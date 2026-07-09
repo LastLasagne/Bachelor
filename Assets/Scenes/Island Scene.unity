@@ -1846,7 +1846,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.1
-  far clip plane: 100
+  far clip plane: 70
   field of view: 60
   orthographic: 0
   orthographic size: 6.5
@@ -4352,119 +4352,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 1444658014423520293, guid: bb79d5811cf9e74488dcc69683707431, type: 3}
   m_PrefabInstance: {fileID: 740016525}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &205866627
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 205866631}
-  - component: {fileID: 205866630}
-  - component: {fileID: 205866629}
-  - component: {fileID: 205866628}
-  m_Layer: 0
-  m_Name: Legacy Cozy Test Yard
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!23 &205866628
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 205866627}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 39cae1862f6344c46a670a1e7a228ce0, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 1
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &205866629
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 205866627}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!33 &205866630
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 205866627}
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &205866631
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 205866627}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4, y: 1, z: 4}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &209110720
 GameObject:
   m_ObjectHideFlags: 0
@@ -7633,6 +7520,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -1.0460205
       objectReference: {fileID: 0}
+    - target: {fileID: 9022373942389398445, guid: 5614d1d498e642a596c812b8e8097835, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 5945023255912511815, guid: 5614d1d498e642a596c812b8e8097835, type: 3}
     - {fileID: 6014987475285865938, guid: 5614d1d498e642a596c812b8e8097835, type: 3}
@@ -9321,6 +9212,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: North Grass Cliff Accent
       objectReference: {fileID: 0}
+    - target: {fileID: 7822372157212731866, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1809385747635474996, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
     - {fileID: 1710423766141878733, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
@@ -9468,6 +9363,10 @@ PrefabInstance:
     - target: {fileID: 6533995593411013638, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
       propertyPath: m_Name
       value: North Grass Cliff Accent (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7822372157212731866, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1809385747635474996, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
@@ -11846,6 +11745,10 @@ PrefabInstance:
     - target: {fileID: 6533995593411013638, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
       propertyPath: m_Name
       value: North Grass Cliff Accent (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7822372157212731866, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1809385747635474996, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
@@ -18920,6 +18823,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: North Grass Cliff Accent (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 7822372157212731866, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1809385747635474996, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
     - {fileID: 1710423766141878733, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
@@ -22175,6 +22082,10 @@ PrefabInstance:
     - target: {fileID: 6533995593411013638, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
       propertyPath: m_Name
       value: North Grass Cliff Accent (8)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7822372157212731866, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1809385747635474996, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
@@ -26905,6 +26816,10 @@ PrefabInstance:
     - target: {fileID: 6533995593411013638, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
       propertyPath: m_Name
       value: North Grass Cliff Accent (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7822372157212731866, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1809385747635474996, guid: c66bdc3baacd4171bfb9402e69687fe1, type: 3}
@@ -36658,7 +36573,6 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 205866631}
   - {fileID: 91573693}
   - {fileID: 1253529868}
   - {fileID: 1781232407}
