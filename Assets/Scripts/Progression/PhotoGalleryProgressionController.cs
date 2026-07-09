@@ -38,6 +38,16 @@ public class PhotoGalleryProgressionUnlock
 
     public void AddShopOffer(ShopItemDefinition item, GameObject collectionToActivate)
     {
+        AddShopOffer(item, collectionToActivate, ShopPurchaseEffectType.ActivateCollection);
+    }
+
+    public void AddShopOffer(ShopItemDefinition item, GameObject collectionToActivate, ShopPurchaseEffectType purchaseEffect)
+    {
+        AddShopOffer(item, collectionToActivate, purchaseEffect, null);
+    }
+
+    public void AddShopOffer(ShopItemDefinition item, GameObject collectionToActivate, ShopPurchaseEffectType purchaseEffect, GameObject exclusiveChoiceGroup)
+    {
         if (item == null)
         {
             return;
@@ -51,7 +61,7 @@ public class PhotoGalleryProgressionUnlock
             }
         }
 
-        shopOffers.Add(new ShopOffer(item, collectionToActivate));
+        shopOffers.Add(new ShopOffer(item, collectionToActivate, purchaseEffect, exclusiveChoiceGroup));
     }
 }
 

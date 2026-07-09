@@ -2,15 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum ShopPurchaseEffectType
+{
+    ActivateCollection,
+    DeactivateCollection
+}
+
 [System.Serializable]
 public class ShopOffer
 {
     [SerializeField] private ShopItemDefinition item;
     [SerializeField] private GameObject collectionToActivate;
+    [SerializeField] private ShopPurchaseEffectType purchaseEffect = ShopPurchaseEffectType.ActivateCollection;
+    [SerializeField] private GameObject exclusiveChoiceGroup;
     [SerializeField] private bool purchased;
 
     public ShopItemDefinition Item => item;
     public GameObject CollectionToActivate => collectionToActivate;
+    public ShopPurchaseEffectType PurchaseEffect => purchaseEffect;
+    public GameObject ExclusiveChoiceGroup => exclusiveChoiceGroup;
     public bool Purchased => purchased;
 
     public ShopOffer()
@@ -18,9 +28,21 @@ public class ShopOffer
     }
 
     public ShopOffer(ShopItemDefinition item, GameObject collectionToActivate)
+        : this(item, collectionToActivate, ShopPurchaseEffectType.ActivateCollection, null)
+    {
+    }
+
+    public ShopOffer(ShopItemDefinition item, GameObject collectionToActivate, ShopPurchaseEffectType purchaseEffect)
+        : this(item, collectionToActivate, purchaseEffect, null)
+    {
+    }
+
+    public ShopOffer(ShopItemDefinition item, GameObject collectionToActivate, ShopPurchaseEffectType purchaseEffect, GameObject exclusiveChoiceGroup)
     {
         this.item = item;
         this.collectionToActivate = collectionToActivate;
+        this.purchaseEffect = purchaseEffect;
+        this.exclusiveChoiceGroup = exclusiveChoiceGroup;
         purchased = false;
     }
 
@@ -34,7 +56,6 @@ public class ShopOffer
         purchased = true;
     }
 }
-
 public class ShopController : MonoBehaviour
 {
     [Header("Resources")]
@@ -63,7 +84,7 @@ public class ShopController : MonoBehaviour
             return false;
         }
 
-        offers.Add(new ShopOffer(offer.Item, offer.CollectionToActivate));
+        offers.Add(new ShopOffer(offer.Item, offer.CollectionToActivate, offer.PurchaseEffect, offer.ExclusiveChoiceGroup));
 
         if (shopPanel != null && shopPanel.activeSelf)
         {
@@ -228,17 +249,52 @@ public class ShopController : MonoBehaviour
             return;
         }
 
-        if (offer.CollectionToActivate != null)
-        {
-            offer.CollectionToActivate.SetActive(true);
-        }
+        ApplyPurchaseEffect(offer);
 
         offer.MarkPurchased();
+        RemoveExclusiveChoiceOffers(offer);
         RemovePurchasedOffers();
         RebuildShopList();
         RefreshResourceAmount();
     }
 
+    private static void ApplyPurchaseEffect(ShopOffer offer)
+    {
+        if (offer.CollectionToActivate == null)
+        {
+            return;
+        }
+
+        switch (offer.PurchaseEffect)
+        {
+            case ShopPurchaseEffectType.ActivateCollection:
+                ActivateCollection(offer.CollectionToActivate);
+                break;
+            case ShopPurchaseEffectType.DeactivateCollection:
+                offer.CollectionToActivate.SetActive(false);
+                break;
+        }
+    }
+    private static void ActivateCollection(GameObject target)
+    {
+        Transform current = target.transform.parent;
+        while (current != null)
+        {
+            current.gameObject.SetActive(true);
+            current = current.parent;
+        }
+
+        SetActiveRecursively(target, true);
+    }
+    private static void SetActiveRecursively(GameObject target, bool active)
+    {
+        target.SetActive(active);
+
+        foreach (Transform child in target.transform)
+        {
+            SetActiveRecursively(child.gameObject, active);
+        }
+    }
     private bool CanAfford(ShopOffer offer)
     {
         return offer?.Item != null && materialResourceBank != null && materialResourceBank.CanAfford(offer.Item.Cost);
@@ -253,6 +309,27 @@ public class ShopController : MonoBehaviour
         }
     }
 
+    private void RemoveExclusiveChoiceOffers(ShopOffer purchasedOffer)
+    {
+        if (purchasedOffer == null || purchasedOffer.ExclusiveChoiceGroup == null)
+        {
+            return;
+        }
+
+        for (int i = offers.Count - 1; i >= 0; i--)
+        {
+            ShopOffer offer = offers[i];
+            if (offer == null || offer == purchasedOffer || offer.Purchased)
+            {
+                continue;
+            }
+
+            if (offer.ExclusiveChoiceGroup == purchasedOffer.ExclusiveChoiceGroup)
+            {
+                offers.RemoveAt(i);
+            }
+        }
+    }
     private void RemovePurchasedOffers()
     {
         for (int i = offers.Count - 1; i >= 0; i--)
