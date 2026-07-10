@@ -14,11 +14,13 @@ public class PhotoGalleryProgressionUnlock
     [SerializeField, Min(1)] private int threshold = 1;
     [SerializeField] private PhotoGalleryUnlockRewardType rewardType;
     [SerializeField] private StoryBitDefinition storyBit;
+    [SerializeField, TextArea(2, 4)] private string rewardMessage;
     [SerializeField] private List<ShopOffer> shopOffers = new List<ShopOffer>();
 
     public int Threshold => threshold;
     public PhotoGalleryUnlockRewardType RewardType => rewardType;
     public StoryBitDefinition StoryBit => storyBit;
+    public string RewardMessage => rewardMessage;
     public IReadOnlyList<ShopOffer> ShopOffers => shopOffers;
 
     public PhotoGalleryProgressionUnlock()
@@ -34,6 +36,11 @@ public class PhotoGalleryProgressionUnlock
     public void SetStoryBit(StoryBitDefinition story)
     {
         storyBit = story;
+    }
+
+    public void SetRewardMessage(string message)
+    {
+        rewardMessage = message;
     }
 
     public void AddShopOffer(ShopItemDefinition item, GameObject collectionToActivate)
@@ -65,7 +72,7 @@ public class PhotoGalleryProgressionUnlock
     }
 }
 
-public class PhotoGalleryProgressionController : MonoBehaviour
+public class PhotoGalleryProgressionController : MonoBehaviour, IQuestRewardMessageProvider
 {
     [SerializeField] private IntVariable photoGalleryProgression;
     [SerializeField] private StoryWindowController storyWindowController;
@@ -158,6 +165,50 @@ public class PhotoGalleryProgressionController : MonoBehaviour
                     }
                     break;
             }
+        }
+    }
+
+    public IEnumerable<string> BuildRewardMessages(QuestDefinition quest, int previousProgression, int newProgression)
+    {
+        bool isGalleryQuest = quest != null && (quest.Category == QuestCategory.Gallery || quest.CategoryTotalProgression == photoGalleryProgression);
+        if (!isGalleryQuest || newProgression <= previousProgression)
+        {
+            yield break;
+        }
+
+        foreach (PhotoGalleryProgressionUnlock unlock in unlocks)
+        {
+            if (unlock == null || unlock.Threshold <= previousProgression || unlock.Threshold > newProgression)
+            {
+                continue;
+            }
+
+            string message = ResolveRewardMessage(unlock);
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                yield return message;
+            }
+        }
+    }
+
+    private static string ResolveRewardMessage(PhotoGalleryProgressionUnlock unlock)
+    {
+        if (!string.IsNullOrWhiteSpace(unlock.RewardMessage))
+        {
+            return unlock.RewardMessage
+                .Replace("{count}", unlock.ShopOffers.Count.ToString())
+                .Replace("{threshold}", unlock.Threshold.ToString());
+        }
+
+        switch (unlock.RewardType)
+        {
+            case PhotoGalleryUnlockRewardType.StoryBit:
+                return "Unlocked a new story.";
+            case PhotoGalleryUnlockRewardType.ShopRecipe:
+                int count = unlock.ShopOffers.Count;
+                return count == 1 ? "Unlocked a new shop recipe." : $"Unlocked {count} new shop recipes.";
+            default:
+                return string.Empty;
         }
     }
 

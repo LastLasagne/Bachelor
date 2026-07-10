@@ -5,9 +5,7 @@ using UnityEngine.UI;
 public class StoryWindowController : MonoBehaviour
 {
     [Header("Scene UI")]
-    [SerializeField] private GameObject storyPanel;
-    [SerializeField] private Image storyIcon;
-    [SerializeField] private Text storyTextLabel;
+    [SerializeField] private GameObject storyPanel;    [SerializeField] private Text storyTextLabel;
     [SerializeField] private Button closeButton;
 
     private readonly Queue<StoryBitDefinition> queuedStories = new Queue<StoryBitDefinition>();
@@ -75,13 +73,6 @@ public class StoryWindowController : MonoBehaviour
 
     private void PresentStory(StoryBitDefinition story)
     {
-        if (storyIcon != null)
-        {
-            storyIcon.sprite = story.Icon;
-            storyIcon.color = story.Icon != null ? Color.white : new Color(0.76f, 0.83f, 0.68f, 1f);
-            storyIcon.preserveAspect = true;
-        }
-
         if (storyTextLabel != null)
         {
             storyTextLabel.text = story.StoryText;
@@ -112,10 +103,11 @@ public class StoryWindowController : MonoBehaviour
 
     private void EnsureUi()
     {
-        if (storyPanel != null && storyIcon != null && storyTextLabel != null && closeButton != null)
+        if (storyPanel != null && storyTextLabel != null && closeButton != null)
         {
             closeButton.onClick.RemoveListener(CloseCurrentStory);
             closeButton.onClick.AddListener(CloseCurrentStory);
+            ApplyStoryPanelLayout();
             return;
         }
 
@@ -157,24 +149,13 @@ public class StoryWindowController : MonoBehaviour
         var contentImage = contentObject.AddComponent<Image>();
         contentImage.color = new Color(0.46f, 0.72f, 0.47f, 1f);
 
-        GameObject iconObject = CreateUiObject("Story Icon", contentRect).gameObject;
-        var iconRect = iconObject.GetComponent<RectTransform>();
-        iconRect.anchorMin = new Vector2(0f, 0.5f);
-        iconRect.anchorMax = new Vector2(0f, 0.5f);
-        iconRect.pivot = new Vector2(0f, 0.5f);
-        iconRect.anchoredPosition = new Vector2(34f, 0f);
-        iconRect.sizeDelta = new Vector2(230f, 230f);
-        storyIcon = iconObject.AddComponent<Image>();
-        storyIcon.color = new Color(0.76f, 0.83f, 0.68f, 1f);
-        storyIcon.preserveAspect = true;
-
         storyTextLabel = CreateText("Story Text", contentRect, string.Empty, 34, FontStyle.Normal, TextAnchor.MiddleLeft);
         storyTextLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
         storyTextLabel.verticalOverflow = VerticalWrapMode.Overflow;
         var textRect = storyTextLabel.rectTransform;
         textRect.anchorMin = new Vector2(0f, 0f);
         textRect.anchorMax = new Vector2(1f, 1f);
-        textRect.offsetMin = new Vector2(300f, 34f);
+        textRect.offsetMin = new Vector2(34f, 34f);
         textRect.offsetMax = new Vector2(-34f, -34f);
         storyTextLabel.color = new Color(0.95f, 0.98f, 0.91f, 1f);
 
@@ -186,6 +167,30 @@ public class StoryWindowController : MonoBehaviour
         closeRect.anchoredPosition = Vector2.zero;
         closeRect.sizeDelta = Vector2.zero;
         closeButton.onClick.AddListener(CloseCurrentStory);
+            ApplyStoryPanelLayout();
+    }
+
+    private void ApplyStoryPanelLayout()
+    {
+        if (storyPanel == null)
+        {
+            return;
+        }
+
+        Transform icon = storyPanel.transform.Find("Story Content/Story Icon");
+        if (icon != null)
+        {
+            icon.gameObject.SetActive(false);
+        }
+
+        if (storyTextLabel != null)
+        {
+            RectTransform textRect = storyTextLabel.rectTransform;
+            textRect.anchorMin = new Vector2(0f, 0f);
+            textRect.anchorMax = new Vector2(1f, 1f);
+            textRect.offsetMin = new Vector2(34f, 34f);
+            textRect.offsetMax = new Vector2(-34f, -34f);
+        }
     }
 
     private Text CreateText(string objectName, RectTransform parent, string text, int fontSize, FontStyle fontStyle, TextAnchor alignment)

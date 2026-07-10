@@ -5,7 +5,8 @@ using UnityEngine;
 public enum QuestCategory
 {
     Trash,
-    Food
+    Food,
+    Gallery
 }
 
 public enum QuestFrequency
