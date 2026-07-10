@@ -55,9 +55,13 @@ public class ShopOffer
     {
         purchased = true;
     }
+
+    public void SetPurchased(bool value) => purchased = value;
 }
 public class ShopController : MonoBehaviour
 {
+    public System.Action<ShopItemDefinition> ItemPurchased;
+    private readonly HashSet<string> restoredPurchasedItems = new HashSet<string>();
     [Header("Resources")]
     [SerializeField] private MaterialResourceBank materialResourceBank;
 
@@ -84,7 +88,13 @@ public class ShopController : MonoBehaviour
             return false;
         }
 
-        offers.Add(new ShopOffer(offer.Item, offer.CollectionToActivate, offer.PurchaseEffect, offer.ExclusiveChoiceGroup));
+        var addedOffer = new ShopOffer(offer.Item, offer.CollectionToActivate, offer.PurchaseEffect, offer.ExclusiveChoiceGroup);
+        if (restoredPurchasedItems.Contains(offer.Item.name))
+        {
+            addedOffer.MarkPurchased();
+            ApplyPurchaseEffect(addedOffer);
+        }
+        offers.Add(addedOffer);
 
         if (shopPanel != null && shopPanel.activeSelf)
         {
@@ -243,12 +253,40 @@ public class ShopController : MonoBehaviour
         ApplyPurchaseEffect(offer);
 
         offer.MarkPurchased();
+        restoredPurchasedItems.Add(offer.Item.name);
+        ItemPurchased?.Invoke(offer.Item);
         RemoveExclusiveChoiceOffers(offer);
         RemovePurchasedOffers();
         RebuildShopList();
         RefreshResourceAmount();
     }
 
+    public void RestorePurchasedItems(IEnumerable<string> itemIds)
+    {
+        restoredPurchasedItems.Clear();
+        if (itemIds != null)
+        {
+            foreach (string itemId in itemIds)
+                if (!string.IsNullOrEmpty(itemId)) restoredPurchasedItems.Add(itemId);
+        }
+
+        var purchasedOffers = new List<ShopOffer>();
+        foreach (ShopOffer offer in offers)
+        {
+            if (offer?.Item == null) continue;
+            bool purchased = restoredPurchasedItems.Contains(offer.Item.name);
+            offer.SetPurchased(purchased);
+            if (purchased)
+            {
+                ApplyPurchaseEffect(offer);
+                purchasedOffers.Add(offer);
+            }
+        }
+        foreach (ShopOffer purchasedOffer in purchasedOffers)
+            RemoveExclusiveChoiceOffers(purchasedOffer);
+    }
+
+    public List<string> GetPurchasedItemIds() => new List<string>(restoredPurchasedItems);
     private static void ApplyPurchaseEffect(ShopOffer offer)
     {
         if (offer.CollectionToActivate == null)

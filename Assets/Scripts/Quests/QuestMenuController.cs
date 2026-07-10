@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class QuestMenuController : MonoBehaviour
 {
@@ -13,10 +14,17 @@ public class QuestMenuController : MonoBehaviour
     [SerializeField] private GameObject successHintPanel;
     [SerializeField] private Text successHintText;
     [SerializeField] private FirebaseNegativePhotoNotificationController negativePhotoNotificationController;
+    [SerializeField, TextArea(2, 4)] private string completedQuestMessage = "Completed! Come back tomorrow for a new quest.";
 
     private readonly Dictionary<QuestDefinition, int> questProgress = new Dictionary<QuestDefinition, int>();
     private QuestDefinition currentQuest;
+    private QuestCategory currentHubCategory = QuestCategory.Trash;
     private bool registeredAsOpenHubMenu;
+    private readonly List<QuestEntryView> questEntries = new List<QuestEntryView>();
+    private Color repeatableDefaultBackgroundColor;
+    private Color repeatableDefaultTextColor;
+    private Color rareDefaultBackgroundColor;
+    private Color rareDefaultTextColor;
 
     public GameObject MenuPanel { get => menuPanel; set => menuPanel = value; }
     public Text MenuTitle { get => menuTitle; set => menuTitle = value; }
@@ -27,13 +35,29 @@ public class QuestMenuController : MonoBehaviour
     public Text SuccessHintText { get => successHintText; set => successHintText = value; }
     public FirebaseNegativePhotoNotificationController NegativePhotoNotificationController { get => negativePhotoNotificationController; set => negativePhotoNotificationController = value; }
     public QuestDefinition CurrentQuest => currentQuest;
+    public string CompletedQuestMessage { get => completedQuestMessage; set => completedQuestMessage = value; }
 
     private void Awake()
     {
         menuPanel?.SetActive(false);
         successHintPanel?.SetActive(false);
+        CaptureDefaultQuestColors();
     }
 
+    private void CaptureDefaultQuestColors()
+    {
+        if (questButton == null) return;
+        Image repeatableImage = questButton.GetComponent<Image>();
+        Text repeatableText = questButton.transform.Find(questTextLabel.gameObject.name)?.GetComponent<Text>();
+        repeatableDefaultBackgroundColor = repeatableImage != null ? repeatableImage.color : Color.white;
+        repeatableDefaultTextColor = repeatableText != null ? repeatableText.color : Color.black;
+
+        Transform rareTransform = questButton.transform.parent.Find("Rare Quest");
+        Image rareImage = rareTransform != null ? rareTransform.GetComponent<Image>() : null;
+        Text rareText = rareTransform != null ? rareTransform.Find(questTextLabel.gameObject.name)?.GetComponent<Text>() : null;
+        rareDefaultBackgroundColor = rareImage != null ? rareImage.color : repeatableDefaultBackgroundColor;
+        rareDefaultTextColor = rareText != null ? rareText.color : repeatableDefaultTextColor;
+    }
     // Invoked by SOAP's native EventListenerGameObject.
     public void HandleMenuRequested(GameObject pointObject)
     {
@@ -48,25 +72,98 @@ public class QuestMenuController : MonoBehaviour
             return;
         }
 
+        currentHubCategory = point.HubCategory;
         currentQuest = point.Quest;
 
-        if (!questProgress.ContainsKey(currentQuest))
-        {
-            questProgress.Add(currentQuest, 0);
-        }
+        int savedProgress = GameProgressManager.Instance != null ? GameProgressManager.Instance.GetProgress(currentQuest) : 0;
+        questProgress[currentQuest] = savedProgress;
 
         if (menuTitle != null)
         {
-            menuTitle.text = $"{currentQuest.Category} Quest";
+            menuTitle.text = $"{currentHubCategory} Quests";
         }
 
         successHintPanel?.SetActive(false);
+        RebuildQuestEntries();
         menuPanel.SetActive(true);
         SetHubMenuOpen(true);
         RefreshQuestDisplay();
         negativePhotoNotificationController?.CheckForNegativePhotos(point);
     }
 
+    private sealed class QuestEntryView
+    {
+        public QuestDefinition Quest;
+        public GameObject GameObject;
+        public Button Button;
+        public Text Description;
+        public Text Progress;
+        public Image Background;
+        public UnityAction ClickAction;
+        public Color ActiveBackgroundColor;
+        public Color ActiveTextColor;
+    }
+
+    private void RebuildQuestEntries()
+    {
+        foreach (QuestEntryView oldEntry in questEntries)
+            if (oldEntry.Button != null && oldEntry.ClickAction != null) oldEntry.Button.onClick.RemoveListener(oldEntry.ClickAction);
+        questEntries.Clear();
+
+        GameProgressManager manager = GameProgressManager.Instance;
+        if (manager == null || questButton == null) return;
+        BindQuestEntry(questButton.gameObject, manager.GetActiveRepeatableQuest(currentHubCategory), "Repeatable Quest");
+        Transform rareTransform = questButton.transform.parent.Find("Rare Quest");
+        if (rareTransform != null) BindQuestEntry(rareTransform.gameObject, manager.GetActiveRareQuest(currentHubCategory), "Rare Quest");
+        else Debug.LogError("The serialized Rare Quest UI object is missing from the Quest Menu Panel.", this);
+    }
+
+    private void BindQuestEntry(GameObject row, QuestDefinition quest, string displayName)
+    {
+        if (row == null || quest == null) return;
+        row.name = displayName;
+        row.SetActive(true);
+        Button button = row.GetComponent<Button>();
+        Text description = row.transform.Find(questTextLabel.gameObject.name)?.GetComponent<Text>();
+        Text progress = row.transform.Find(questProgressLabel.gameObject.name)?.GetComponent<Text>();
+        Image background = row.GetComponent<Image>();
+        UnityAction clickAction = () => SelectQuest(quest);
+        var entry = new QuestEntryView
+        {
+            Quest = quest,
+            GameObject = row,
+            Button = button,
+            Description = description,
+            Progress = progress,
+            Background = background,
+            ClickAction = clickAction,
+            ActiveBackgroundColor = row == questButton.gameObject ? repeatableDefaultBackgroundColor : rareDefaultBackgroundColor,
+            ActiveTextColor = row == questButton.gameObject ? repeatableDefaultTextColor : rareDefaultTextColor
+        };
+        questEntries.Add(entry);
+        button.onClick.AddListener(clickAction);
+        RefreshQuestEntry(entry);
+    }
+
+    private void SelectQuest(QuestDefinition quest)
+    {
+        currentQuest = quest;
+        questProgress[quest] = GameProgressManager.Instance != null ? GameProgressManager.Instance.GetProgress(quest) : 0;
+    }
+
+    private void RefreshQuestEntry(QuestEntryView entry)
+    {
+        GameProgressManager manager = GameProgressManager.Instance;
+        if (manager == null || entry == null || entry.Quest == null) return;
+        bool completed = manager.IsCompletedToday(entry.Quest);
+        if (entry.Description != null)
+            entry.Description.text = completed ? completedQuestMessage : $"{entry.Quest.Frequency}: {entry.Quest.QuestText}";
+        if (entry.Progress != null)
+            entry.Progress.text = completed ? string.Empty : $"{manager.GetProgress(entry.Quest)}/{manager.GetAmountDue(entry.Quest)}";
+        if (entry.Button != null) entry.Button.interactable = !completed;
+        if (entry.Background != null) entry.Background.color = completed ? new Color(0.45f, 0.45f, 0.45f, 0.85f) : entry.ActiveBackgroundColor;
+        if (entry.Description != null) entry.Description.color = completed ? Color.black : entry.ActiveTextColor;
+    }
     // Invoked by SOAP's native EventListenerNoParam.
     public void HandleQuestProgressRequested()
     {
@@ -75,12 +172,15 @@ public class QuestMenuController : MonoBehaviour
             return;
         }
 
+        if (GameProgressManager.Instance != null && GameProgressManager.Instance.IsCompletedToday(currentQuest)) return;
+        int amountDue = GameProgressManager.Instance != null ? GameProgressManager.Instance.GetAmountDue(currentQuest) : currentQuest.AmountDue;
         int progress = questProgress[currentQuest];
-        progress = Mathf.Min(progress + 1, currentQuest.AmountDue);
+        progress = Mathf.Min(progress + 1, amountDue);
         questProgress[currentQuest] = progress;
+        GameProgressManager.Instance?.SetQuestProgress(currentQuest, progress);
         RefreshQuestDisplay();
 
-        if (progress >= currentQuest.AmountDue)
+        if (progress >= amountDue)
         {
             CompleteCurrentQuest();
         }
@@ -88,6 +188,7 @@ public class QuestMenuController : MonoBehaviour
 
     private void CompleteCurrentQuest()
     {
+        GameProgressManager.Instance?.CompleteQuest(currentQuest);
         int previousCategoryTotal = currentQuest.CategoryTotalProgression != null
             ? currentQuest.CategoryTotalProgression.Value
             : 0;
@@ -117,6 +218,7 @@ public class QuestMenuController : MonoBehaviour
             questButton.interactable = false;
         }
 
+        RefreshQuestDisplay();
         successHintPanel?.SetActive(true);
     }
 
@@ -130,10 +232,7 @@ public class QuestMenuController : MonoBehaviour
 
         successHintPanel.SetActive(false);
 
-        if (currentQuest != null && currentQuest.Frequency == QuestFrequency.Repeatable)
-        {
-            questProgress[currentQuest] = 0;
-        }
+
 
         RefreshQuestDisplay();
     }
@@ -173,27 +272,8 @@ public class QuestMenuController : MonoBehaviour
 
     private void RefreshQuestDisplay()
     {
-        if (currentQuest == null)
-        {
-            return;
-        }
-
-        int progress = questProgress[currentQuest];
-
-        if (questTextLabel != null)
-        {
-            questTextLabel.text = currentQuest.QuestText;
-        }
-
-        if (questProgressLabel != null)
-        {
-            questProgressLabel.text = $"{progress}/{currentQuest.AmountDue}";
-        }
-
-        if (questButton != null)
-        {
-            questButton.interactable = progress < currentQuest.AmountDue;
-        }
+        foreach (QuestEntryView entry in questEntries)
+            RefreshQuestEntry(entry);
     }
 
     private IEnumerable<string> BuildRewardMessages(QuestDefinition quest, int previousProgression, int newProgression)
@@ -260,6 +340,3 @@ public class QuestMenuController : MonoBehaviour
         return builder.ToString();
     }
 }
-
-
-

@@ -80,8 +80,10 @@ public class PhotoGalleryProgressionController : MonoBehaviour, IQuestRewardMess
     [SerializeField] private List<PhotoGalleryProgressionUnlock> unlocks = new List<PhotoGalleryProgressionUnlock>();
 
     private int lastHandledProgression;
+    private bool restoringSavedProgression;
 
     public IReadOnlyList<PhotoGalleryProgressionUnlock> Unlocks => unlocks;
+    public IntVariable Progression => photoGalleryProgression;
 
     private void OnEnable()
     {
@@ -119,8 +121,23 @@ public class PhotoGalleryProgressionController : MonoBehaviour, IQuestRewardMess
         }
     }
 
+    public void RestoreSavedProgression(int progression)
+    {
+        if (photoGalleryProgression == null) return;
+        restoringSavedProgression = true;
+        photoGalleryProgression.Value = Mathf.Max(0, progression);
+        restoringSavedProgression = false;
+        lastHandledProgression = photoGalleryProgression.Value;
+        ApplyRecipeUnlocksUpTo(lastHandledProgression);
+    }
     private void HandleProgressionChanged(int newProgression)
     {
+        if (restoringSavedProgression)
+        {
+            lastHandledProgression = newProgression;
+            return;
+        }
+
         if (newProgression > lastHandledProgression)
         {
             ApplyNewUnlocks(lastHandledProgression, newProgression, showStories: true);
