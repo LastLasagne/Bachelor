@@ -22,6 +22,8 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     [Header("Progression")]
     [SerializeField] private IntVariable viewedPhotoProgression;
     [SerializeField, Min(1)] private int progressionValuePerPhoto = 1;
+    [SerializeField, Min(1)] private int dailyViewLimit = 4;
+    [SerializeField] private string dailyLimitMessage = "You have viewed all available pictures for today. Come back tomorrow.";
 
     [Header("Photo Display")]
     [SerializeField] private float landscapePhotoRotationDegrees = 90f;
@@ -131,6 +133,13 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         SetPanelVisible(true);
         SetHubMenuOpen(true);
         UpdateCounterText();
+        if (!CanViewAnotherPhoto())
+        {
+            SetPhotoTexture(null);
+            SetStatus(dailyLimitMessage);
+            SetReactionButtonsInteractable(false);
+            return;
+        }
         await LoadNextPhotoAsync(refreshList: true);
     }
 
@@ -167,9 +176,10 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         try
         {
             bool reactionSaved = await SaveReactionAsync(currentPhoto, isPositive);
-            if (reactionSaved && viewedPhotoProgression != null)
+            if (reactionSaved)
             {
-                viewedPhotoProgression.Add(progressionValuePerPhoto);
+                if (viewedPhotoProgression != null) viewedPhotoProgression.Add(progressionValuePerPhoto);
+                GameProgressManager.Instance?.RecordGalleryView();
             }
 
             UpdateCounterText();
@@ -186,6 +196,13 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         finally
         {
             isLoading = false;
+        }
+
+        if (!CanViewAnotherPhoto())
+        {
+            SetStatus(dailyLimitMessage);
+            SetReactionButtonsInteractable(false);
+            return;
         }
 
         await LoadNextPhotoAsync(refreshList: shuffledPhotoQueue.Count == 0);
@@ -696,6 +713,10 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         }
     }
 
+    private bool CanViewAnotherPhoto()
+    {
+        return GameProgressManager.Instance == null || GameProgressManager.Instance.CanViewGalleryPhoto(dailyViewLimit);
+    }
     private void UpdateCounterText()
     {
         if (counterText == null)
@@ -704,7 +725,8 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         }
 
         int count = viewedPhotoProgression != null ? viewedPhotoProgression.Value : 0;
-        counterText.text = $"Pictures viewed: {count}";
+        int today = GameProgressManager.Instance != null ? GameProgressManager.Instance.GalleryViewsToday : 0;
+        counterText.text = $"Pictures viewed: {count}\nToday: {today}/{dailyViewLimit}";
     }
 
     private readonly struct GalleryPhotoEntry

@@ -17,6 +17,7 @@ public sealed class GameProgressManager : MonoBehaviour
     private MaterialResourceBank bank;
     private ShopController shop;
     private IntVariable trash;
+    private TrashProgressionIslandController trashController;
     private IntVariable food;
     private IntVariable gallery;
     private PhotoGalleryProgressionController galleryController;
@@ -78,6 +79,7 @@ public sealed class GameProgressManager : MonoBehaviour
         bank = shop != null ? shop.MaterialResourceBank : null;
         var quests = Resources.LoadAll<QuestDefinition>("Quests");
         trash = quests.FirstOrDefault(q => q.Category == QuestCategory.Trash)?.CategoryTotalProgression;
+        trashController = FindFirstObjectByType<TrashProgressionIslandController>(FindObjectsInactive.Include);
         food = quests.FirstOrDefault(q => q.Category == QuestCategory.Food)?.CategoryTotalProgression;
         galleryController = FindFirstObjectByType<PhotoGalleryProgressionController>(FindObjectsInactive.Include);
         gallery = galleryController != null ? galleryController.Progression : null;
@@ -87,7 +89,8 @@ public sealed class GameProgressManager : MonoBehaviour
     {
         applying = true;
         var data = save.Data;
-        if (trash != null) trash.Value = data.trashProgression;
+        if (trashController != null) trashController.RestoreSavedProgression(data.trashProgression);
+        else if (trash != null) trash.Value = data.trashProgression;
         if (food != null) food.Value = data.foodProgression;
         if (galleryController != null) galleryController.RestoreSavedProgression(data.galleryProgression);
         else if (gallery != null) gallery.Value = data.galleryProgression;
@@ -118,6 +121,31 @@ public sealed class GameProgressManager : MonoBehaviour
         return category == QuestCategory.Food ? activeFoodRare : activeTrashRare;
     }
 
+    public int TrashProgression => trash != null ? trash.Value : 0;
+    public int GalleryProgression => gallery != null ? gallery.Value : 0;
+
+    public int GalleryViewsToday => save != null ? save.Data.galleryViewsToday : 0;
+    public bool CanViewGalleryPhoto(int dailyLimit) => save != null && save.Data.galleryViewsToday < Mathf.Max(1, dailyLimit);
+
+    public void RecordGalleryView()
+    {
+        if (save == null) return;
+        save.Data.galleryViewsToday++;
+        save.Commit();
+    }
+    public bool IsInventorStoryRead(int storyIndex)
+    {
+        if (save == null) return false;
+        return storyIndex == 0 ? save.Data.inventorStoryOneRead : save.Data.inventorStoryTwoRead;
+    }
+
+    public void MarkInventorStoryRead(int storyIndex)
+    {
+        if (save == null) return;
+        if (storyIndex == 0) save.Data.inventorStoryOneRead = true;
+        else save.Data.inventorStoryTwoRead = true;
+        save.Commit();
+    }
     public int GetAmountDue(QuestDefinition quest)
     {
         if (quest == null) return 1;
@@ -194,6 +222,7 @@ public sealed class GameProgressManager : MonoBehaviour
             string previousFoodRareId = save.Data.foodRareQuestId;
 
             save.Data.questDate = today;
+            save.Data.galleryViewsToday = 0;
             save.Data.trashRepeatableCompletedToday = false;
             save.Data.trashRareCompletedToday = false;
             save.Data.foodRepeatableCompletedToday = false;
@@ -229,6 +258,16 @@ public sealed class GameProgressManager : MonoBehaviour
         }
     }
 
+    public void ResetAllProgressForDebug()
+    {
+        if (save == null) return;
+        save.Delete();
+        ApplySave();
+        RotateQuestsIfNeeded();
+        AssignDailyQuests();
+        save.Commit();
+        Debug.Log("Game progression and gallery view totals were reset.");
+    }
     public void AdvanceToNextDayForDebug()
     {
         if (save == null) return;

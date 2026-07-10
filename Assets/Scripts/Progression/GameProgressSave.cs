@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Obvious.Soap;
 using UnityEngine;
@@ -40,6 +40,11 @@ public class GameProgressSaveData
     public int trashRareProgress;
     public int foodRepeatableProgress;
     public int foodRareProgress;
+
+    public int galleryViewsToday;
+
+    public bool inventorStoryOneRead;
+    public bool inventorStoryTwoRead;
 
     public int debugDayOffset;
 }

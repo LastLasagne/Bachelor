@@ -11,7 +11,7 @@ public enum TrashUnlockRewardType
 {
     RemoveTrashObjects,
     AddMaterialResource,
-    GrantSpecialItem
+    ShowStoryBit
 }
 
 [System.Serializable]
@@ -20,14 +20,14 @@ public class TrashProgressionUnlock
     [SerializeField, Min(1)] private int threshold = 1;
     [SerializeField] private TrashUnlockRewardType rewardType;
     [SerializeField, Min(0)] private int materialAmount;
-    [SerializeField] private SpecialItemDefinition specialItem;
+    [SerializeField] private StoryBitDefinition storyBit;
     [SerializeField, TextArea(2, 4)] private string rewardMessage;
     [SerializeField] private List<GameObject> trashObjects = new List<GameObject>();
 
     public int Threshold => threshold;
     public TrashUnlockRewardType RewardType => rewardType;
     public int MaterialAmount => materialAmount;
-    public SpecialItemDefinition SpecialItem => specialItem;
+    public StoryBitDefinition StoryBit => storyBit;
     public string RewardMessage => rewardMessage;
     public IReadOnlyList<GameObject> TrashObjects => trashObjects;
 
@@ -42,9 +42,9 @@ public class TrashProgressionUnlock
         materialAmount = Mathf.Max(0, amount);
     }
 
-    public void SetSpecialItem(SpecialItemDefinition item)
+    public void SetStoryBit(StoryBitDefinition story)
     {
-        specialItem = item;
+        storyBit = story;
     }
 
     public void SetRewardMessage(string message)
@@ -75,12 +75,13 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
 {
     [SerializeField] private IntVariable trashProgression;
     [SerializeField] private MaterialResourceBank materialResourceBank;
-    [SerializeField] private SpecialItemInventory specialItemInventory;
-    [SerializeField] private SpecialItemDefinition thresholdThreeItem;
-    [SerializeField] private SpecialItemDefinition thresholdNineItem;
+    [SerializeField] private StoryWindowController storyWindowController;
+    [SerializeField] private StoryBitDefinition thresholdThreeStory;
+    [SerializeField] private StoryBitDefinition thresholdNineStory;
     [SerializeField] private List<TrashProgressionUnlock> unlocks = new List<TrashProgressionUnlock>();
 
     private int lastHandledProgression;
+    private bool restoringSavedProgression;
 
     public IReadOnlyList<TrashProgressionUnlock> Unlocks => unlocks;
 
@@ -121,8 +122,24 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
 
     private int CurrentProgression => trashProgression != null ? trashProgression.Value : 0;
 
+    public void RestoreSavedProgression(int progression)
+    {
+        if (trashProgression == null) return;
+        restoringSavedProgression = true;
+        trashProgression.Value = Mathf.Max(0, progression);
+        restoringSavedProgression = false;
+        lastHandledProgression = trashProgression.Value;
+        RefreshTrashObjectState(lastHandledProgression);
+    }
     private void HandleTrashProgressionChanged(int newProgression)
     {
+        if (restoringSavedProgression)
+        {
+            lastHandledProgression = newProgression;
+            RefreshTrashObjectState(newProgression);
+            return;
+        }
+
         if (newProgression > lastHandledProgression)
         {
             ApplyNewUnlocks(lastHandledProgression, newProgression);
@@ -146,8 +163,8 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
                 case TrashUnlockRewardType.AddMaterialResource:
                     materialResourceBank?.Add(unlock.MaterialAmount);
                     break;
-                case TrashUnlockRewardType.GrantSpecialItem:
-                    specialItemInventory?.Add(unlock.SpecialItem);
+                case TrashUnlockRewardType.ShowStoryBit:
+                    if (!restoringSavedProgression) ResolveStoryWindowController()?.ShowStory(unlock.StoryBit);
                     break;
             }
         }
@@ -177,15 +194,12 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
 
     private static string ResolveRewardMessage(TrashProgressionUnlock unlock)
     {
-        string itemName = unlock.SpecialItem != null && !string.IsNullOrWhiteSpace(unlock.SpecialItem.ItemName)
-            ? unlock.SpecialItem.ItemName
-            : "a special item";
 
         if (!string.IsNullOrWhiteSpace(unlock.RewardMessage))
         {
             return unlock.RewardMessage
                 .Replace("{amount}", unlock.MaterialAmount.ToString())
-                .Replace("{item}", itemName)
+                .Replace("{story}", unlock.StoryBit != null ? unlock.StoryBit.name : "story")
                 .Replace("{threshold}", unlock.Threshold.ToString());
         }
 
@@ -193,8 +207,8 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
         {
             case TrashUnlockRewardType.AddMaterialResource:
                 return $"Gained {unlock.MaterialAmount} materials.";
-            case TrashUnlockRewardType.GrantSpecialItem:
-                return $"Gained {itemName}.";
+            case TrashUnlockRewardType.ShowStoryBit:
+                return "Unlocked a new story piece.";
             case TrashUnlockRewardType.RemoveTrashObjects:
                 return "Cleared trash from the island.";
             default:
@@ -242,17 +256,17 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
         {
             unlocks.Add(new TrashProgressionUnlock(1, TrashUnlockRewardType.RemoveTrashObjects));
             unlocks.Add(new TrashProgressionUnlock(2, TrashUnlockRewardType.AddMaterialResource));
-            unlocks.Add(new TrashProgressionUnlock(3, TrashUnlockRewardType.GrantSpecialItem));
+            unlocks.Add(new TrashProgressionUnlock(3, TrashUnlockRewardType.ShowStoryBit));
             unlocks.Add(new TrashProgressionUnlock(4, TrashUnlockRewardType.AddMaterialResource));
             unlocks.Add(new TrashProgressionUnlock(5, TrashUnlockRewardType.RemoveTrashObjects));
             unlocks.Add(new TrashProgressionUnlock(6, TrashUnlockRewardType.AddMaterialResource));
             unlocks.Add(new TrashProgressionUnlock(7, TrashUnlockRewardType.AddMaterialResource));
             unlocks.Add(new TrashProgressionUnlock(8, TrashUnlockRewardType.RemoveTrashObjects));
-            unlocks.Add(new TrashProgressionUnlock(9, TrashUnlockRewardType.GrantSpecialItem));
+            unlocks.Add(new TrashProgressionUnlock(9, TrashUnlockRewardType.ShowStoryBit));
             AssignDefaultResourceAmounts();
         }
 
-        AssignDefaultSpecialItems();
+        AssignDefaultStories();
         AssignDefaultTrashObjects();
     }
 
@@ -264,10 +278,10 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
         SetMaterialAmountForThreshold(7, 100);
     }
 
-    private void AssignDefaultSpecialItems()
+    private void AssignDefaultStories()
     {
-        SetSpecialItemForThreshold(3, thresholdThreeItem);
-        SetSpecialItemForThreshold(9, thresholdNineItem);
+        SetStoryForThreshold(3, thresholdThreeStory);
+        SetStoryForThreshold(9, thresholdNineStory);
     }
 
     private void AssignDefaultTrashObjects()
@@ -283,12 +297,12 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
         unlock?.SetMaterialAmount(amount);
     }
 
-    private void SetSpecialItemForThreshold(int threshold, SpecialItemDefinition item)
+    private void SetStoryForThreshold(int threshold, StoryBitDefinition story)
     {
-        TrashProgressionUnlock unlock = FindUnlock(threshold, TrashUnlockRewardType.GrantSpecialItem);
-        if (unlock != null && unlock.SpecialItem == null)
+        TrashProgressionUnlock unlock = FindUnlock(threshold, TrashUnlockRewardType.ShowStoryBit);
+        if (unlock != null && unlock.StoryBit == null)
         {
-            unlock.SetSpecialItem(item);
+            unlock.SetStoryBit(story);
         }
     }
 
@@ -315,6 +329,12 @@ public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessa
         return unlocks.Find(unlock => unlock != null && unlock.Threshold == threshold && unlock.RewardType == rewardType);
     }
 
+    private StoryWindowController ResolveStoryWindowController()
+    {
+        if (storyWindowController == null)
+            storyWindowController = FindFirstObjectByType<StoryWindowController>(FindObjectsInactive.Include);
+        return storyWindowController;
+    }
     private void EnsureTrashGroups()
     {
         Transform trashRoot = FindOrCreateChild(transform, "Trash Objects");

@@ -24,6 +24,12 @@ public static class GameProgressSaveEditor
     [MenuItem("Tools/Game Progress/Reset Save File")]
     private static void ResetSave()
     {
+        if (Application.isPlaying && GameProgressManager.Instance != null)
+        {
+            GameProgressManager.Instance.ResetAllProgressForDebug();
+            return;
+        }
+
         GameProgressSave save = Resources.Load<GameProgressSave>("GameProgressSave");
         if (save == null) { Debug.LogError("GameProgressSave asset could not be found."); return; }
         if (!EditorUtility.DisplayDialog("Reset game save?", "This permanently deletes the current local progression save.", "Reset", "Cancel")) return;

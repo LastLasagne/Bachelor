@@ -55,6 +55,13 @@ public class StoryWindowController : MonoBehaviour
         PresentStory(story);
     }
 
+    public void ShowMessage(string message)
+    {
+        EnsureUi();
+        if (storyTextLabel != null) storyTextLabel.text = message;
+        storyPanel.SetActive(true);
+        SetHubMenuOpen(true);
+    }
     public void CloseCurrentStory()
     {
         if (queuedStories.Count > 0)
