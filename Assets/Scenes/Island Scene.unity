@@ -1786,8 +1786,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalCrossingFollowCamera
   target: {fileID: 1281390398}
   fixedYaw: 0
-  distance: 10
-  height: 9
+  distance: 9
+  height: 11
   targetFocusHeight: 1
   lookAheadDistance: 0
   smoothTime: 0.14
@@ -16240,7 +16240,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8058576568428729429, guid: 55f2f3ae9a9cc0d40b47c3799d69afdf, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.783
+      value: 7.711
       objectReference: {fileID: 0}
     - target: {fileID: 8058576568428729429, guid: 55f2f3ae9a9cc0d40b47c3799d69afdf, type: 3}
       propertyPath: m_LocalPosition.z
@@ -20845,15 +20845,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8058576568428729429, guid: 55f2f3ae9a9cc0d40b47c3799d69afdf, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3.904
+      value: -3.902
       objectReference: {fileID: 0}
     - target: {fileID: 8058576568428729429, guid: 55f2f3ae9a9cc0d40b47c3799d69afdf, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.854
+      value: 7.772
       objectReference: {fileID: 0}
     - target: {fileID: 8058576568428729429, guid: 55f2f3ae9a9cc0d40b47c3799d69afdf, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.396
+      value: 1.425
       objectReference: {fileID: 0}
     - target: {fileID: 8058576568428729429, guid: 55f2f3ae9a9cc0d40b47c3799d69afdf, type: 3}
       propertyPath: m_LocalRotation.w
@@ -25069,15 +25069,45 @@ MonoBehaviour:
     rewardType: 1
     storyBit: {fileID: 0}
     shopOffers:
-    - item: {fileID: 11400000, guid: cc71a1ea2a85b1f4d923fe450729999e, type: 2}
-      collectionToActivate: {fileID: 608001660}
+    - item: {fileID: 11400000, guid: a43420990fc85ba4391dd928ef05b66c, type: 2}
+      collectionToActivate: {fileID: 1675670443}
       purchaseEffect: 0
       exclusiveChoiceGroup: {fileID: 0}
       purchased: 0
-    - item: {fileID: 11400000, guid: 47e824548c60a25489c6b6cdf6cd7477, type: 2}
-      collectionToActivate: {fileID: 758101188}
+    - item: {fileID: 11400000, guid: 933b929e06ee1cc4fa9c881d8231b497, type: 2}
+      collectionToActivate: {fileID: 1111912144}
       purchaseEffect: 0
       exclusiveChoiceGroup: {fileID: 0}
+      purchased: 0
+    - item: {fileID: 11400000, guid: 38487be6437458b45abd753a57987127, type: 2}
+      collectionToActivate: {fileID: 131385969}
+      purchaseEffect: 0
+      exclusiveChoiceGroup: {fileID: 113434642}
+      purchased: 0
+    - item: {fileID: 11400000, guid: d7c867bec318d45479423850caf9e0c0, type: 2}
+      collectionToActivate: {fileID: 1507092186}
+      purchaseEffect: 0
+      exclusiveChoiceGroup: {fileID: 113434642}
+      purchased: 0
+    - item: {fileID: 11400000, guid: 1b2d0221d72ecb94ea896cd8907e0da0, type: 2}
+      collectionToActivate: {fileID: 1843031810}
+      purchaseEffect: 0
+      exclusiveChoiceGroup: {fileID: 113434642}
+      purchased: 0
+    - item: {fileID: 11400000, guid: 23c61956988c4684e977b988f5aaa6ac, type: 2}
+      collectionToActivate: {fileID: 2128504671}
+      purchaseEffect: 0
+      exclusiveChoiceGroup: {fileID: 364606009}
+      purchased: 0
+    - item: {fileID: 11400000, guid: 7a18d12f80838ad46aea37e100c67d28, type: 2}
+      collectionToActivate: {fileID: 1496146554}
+      purchaseEffect: 0
+      exclusiveChoiceGroup: {fileID: 364606009}
+      purchased: 0
+    - item: {fileID: 11400000, guid: ead18bda5ccfa934faac2d5b850ae1a1, type: 2}
+      collectionToActivate: {fileID: 22538601}
+      purchaseEffect: 0
+      exclusiveChoiceGroup: {fileID: 364606009}
       purchased: 0
   - threshold: 8
     rewardType: 1
@@ -26145,11 +26175,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1291981419571536902, guid: 433995bc541c75847b8a84fb785a8a09, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.3
+      value: -1.09
       objectReference: {fileID: 0}
     - target: {fileID: 1291981419571536902, guid: 433995bc541c75847b8a84fb785a8a09, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.65
+      value: 2.84
       objectReference: {fileID: 0}
     - target: {fileID: 1291981419571536902, guid: 433995bc541c75847b8a84fb785a8a09, type: 3}
       propertyPath: m_LocalRotation.w
@@ -38835,27 +38865,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.5161998
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.5162
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.5161998
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.978714
+      value: -0.371
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.7541904
+      value: -0.123
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.4757047
+      value: 1.261
       objectReference: {fileID: 0}
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -38884,6 +38914,10 @@ PrefabInstance:
     - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3210012338086005542, guid: ab630dd0d1f6f7d4499395b696083fb9, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
