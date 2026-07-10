@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Obvious.Soap;
 using UnityEngine;
 
@@ -21,12 +21,14 @@ public class TrashProgressionUnlock
     [SerializeField] private TrashUnlockRewardType rewardType;
     [SerializeField, Min(0)] private int materialAmount;
     [SerializeField] private SpecialItemDefinition specialItem;
+    [SerializeField, TextArea(2, 4)] private string rewardMessage;
     [SerializeField] private List<GameObject> trashObjects = new List<GameObject>();
 
     public int Threshold => threshold;
     public TrashUnlockRewardType RewardType => rewardType;
     public int MaterialAmount => materialAmount;
     public SpecialItemDefinition SpecialItem => specialItem;
+    public string RewardMessage => rewardMessage;
     public IReadOnlyList<GameObject> TrashObjects => trashObjects;
 
     public TrashProgressionUnlock(int threshold, TrashUnlockRewardType rewardType)
@@ -43,6 +45,11 @@ public class TrashProgressionUnlock
     public void SetSpecialItem(SpecialItemDefinition item)
     {
         specialItem = item;
+    }
+
+    public void SetRewardMessage(string message)
+    {
+        rewardMessage = message;
     }
 
     public void SetTrashObjects(IEnumerable<GameObject> objects)
@@ -64,7 +71,7 @@ public class TrashProgressionUnlock
 }
 
 [ExecuteAlways]
-public class TrashProgressionIslandController : MonoBehaviour
+public class TrashProgressionIslandController : MonoBehaviour, IQuestRewardMessageProvider
 {
     [SerializeField] private IntVariable trashProgression;
     [SerializeField] private MaterialResourceBank materialResourceBank;
@@ -143,6 +150,55 @@ public class TrashProgressionIslandController : MonoBehaviour
                     specialItemInventory?.Add(unlock.SpecialItem);
                     break;
             }
+        }
+    }
+
+    public IEnumerable<string> BuildRewardMessages(QuestDefinition quest, int previousProgression, int newProgression)
+    {
+        if (quest == null || quest.Category != QuestCategory.Trash || newProgression <= previousProgression)
+        {
+            yield break;
+        }
+
+        foreach (TrashProgressionUnlock unlock in unlocks)
+        {
+            if (unlock == null || unlock.Threshold <= previousProgression || unlock.Threshold > newProgression)
+            {
+                continue;
+            }
+
+            string message = ResolveRewardMessage(unlock);
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                yield return message;
+            }
+        }
+    }
+
+    private static string ResolveRewardMessage(TrashProgressionUnlock unlock)
+    {
+        string itemName = unlock.SpecialItem != null && !string.IsNullOrWhiteSpace(unlock.SpecialItem.ItemName)
+            ? unlock.SpecialItem.ItemName
+            : "a special item";
+
+        if (!string.IsNullOrWhiteSpace(unlock.RewardMessage))
+        {
+            return unlock.RewardMessage
+                .Replace("{amount}", unlock.MaterialAmount.ToString())
+                .Replace("{item}", itemName)
+                .Replace("{threshold}", unlock.Threshold.ToString());
+        }
+
+        switch (unlock.RewardType)
+        {
+            case TrashUnlockRewardType.AddMaterialResource:
+                return $"Gained {unlock.MaterialAmount} materials.";
+            case TrashUnlockRewardType.GrantSpecialItem:
+                return $"Gained {itemName}.";
+            case TrashUnlockRewardType.RemoveTrashObjects:
+                return "Cleared trash from the island.";
+            default:
+                return string.Empty;
         }
     }
 

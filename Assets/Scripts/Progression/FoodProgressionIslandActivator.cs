@@ -8,13 +8,14 @@ using UnityEditor.SceneManagement;
 #endif
 
 [ExecuteAlways]
-public class FoodProgressionIslandActivator : MonoBehaviour
+public class FoodProgressionIslandActivator : MonoBehaviour, IQuestRewardMessageProvider
 {
     private const int DefaultCollectionCount = 10;
 
     [SerializeField] private IntVariable foodProgression;
     [SerializeField, Min(1)] private int collectionCount = DefaultCollectionCount;
     [SerializeField] private List<GameObject> collections = new List<GameObject>();
+    [SerializeField] private List<string> rewardMessages = new List<string>();
 
     public IntVariable FoodProgression { get => foodProgression; set => foodProgression = value; }
     public IReadOnlyList<GameObject> Collections => collections;
@@ -59,6 +60,22 @@ public class FoodProgressionIslandActivator : MonoBehaviour
         RefreshActiveCollections();
     }
 
+    public IEnumerable<string> BuildRewardMessages(QuestDefinition quest, int previousProgression, int newProgression)
+    {
+        if (quest == null || quest.Category != QuestCategory.Food || newProgression <= previousProgression)
+        {
+            yield break;
+        }
+
+        EnsureRewardMessages();
+        for (int threshold = previousProgression + 1; threshold <= newProgression; threshold++)
+        {
+            int index = threshold - 1;
+            string message = index >= 0 && index < rewardMessages.Count ? rewardMessages[index] : string.Empty;
+            yield return string.IsNullOrWhiteSpace(message) ? "Unlocked a new island upgrade." : message;
+        }
+    }
+
     private void RefreshActiveCollections()
     {
         int unlockedCount = foodProgression != null ? foodProgression.Value : 0;
@@ -76,6 +93,7 @@ public class FoodProgressionIslandActivator : MonoBehaviour
     private void EnsureCollectionSetup()
     {
         RemoveMissingCollectionReferences();
+        EnsureRewardMessages();
 
         for (int i = collections.Count; i < collectionCount; i++)
         {
@@ -106,6 +124,19 @@ public class FoodProgressionIslandActivator : MonoBehaviour
             EditorSceneManager.MarkSceneDirty(gameObject.scene);
         }
 #endif
+    }
+
+    private void EnsureRewardMessages()
+    {
+        while (rewardMessages.Count < collectionCount)
+        {
+            rewardMessages.Add("Unlocked a new island upgrade.");
+        }
+
+        while (rewardMessages.Count > collectionCount)
+        {
+            rewardMessages.RemoveAt(rewardMessages.Count - 1);
+        }
     }
 
     private void RemoveMissingCollectionReferences()

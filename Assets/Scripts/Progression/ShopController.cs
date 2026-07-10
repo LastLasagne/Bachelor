@@ -296,7 +296,7 @@ public class ShopController : MonoBehaviour
         if (resourceAmountLabel != null)
         {
             int amount = materialResourceBank != null ? materialResourceBank.MaterialAmount : 0;
-            resourceAmountLabel.text = amount.ToString();
+            resourceAmountLabel.text = $"Materials: {amount}";
         }
     }
 
@@ -352,6 +352,7 @@ public class ShopController : MonoBehaviour
             closeButton.onClick.RemoveListener(CloseShop);
             closeButton.onClick.AddListener(CloseShop);
         ApplyShopPanelLayout();
+            RefreshResourceAmount();
             return;
         }
 
@@ -384,13 +385,14 @@ public class ShopController : MonoBehaviour
         title.rectTransform.sizeDelta = new Vector2(-300f, 72f);
         title.color = new Color(0.18f, 0.27f, 0.16f, 1f);
 
-        resourceAmountLabel = CreateText("Resource Amount", panelRect, "0", 40, FontStyle.Bold, TextAnchor.MiddleRight);
+        resourceAmountLabel = CreateText("Resource Amount", panelRect, "Materials: 0", 36, FontStyle.Bold, TextAnchor.MiddleRight);
         resourceAmountLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
         resourceAmountLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
         resourceAmountLabel.rectTransform.pivot = new Vector2(1f, 1f);
         resourceAmountLabel.rectTransform.anchoredPosition = new Vector2(-42f, -30f);
-        resourceAmountLabel.rectTransform.sizeDelta = new Vector2(180f, 60f);
+        resourceAmountLabel.rectTransform.sizeDelta = new Vector2(340f, 60f);
         resourceAmountLabel.color = new Color(0.18f, 0.27f, 0.16f, 1f);
+        resourceAmountLabel.raycastTarget = false;
 
         closeButton = CreateButton("Close", panelRect, "Close", new Color(0.9f, 0.45f, 0.36f, 1f), 36, Color.white);
         var closeRect = closeButton.GetComponent<RectTransform>();
@@ -456,6 +458,7 @@ public class ShopController : MonoBehaviour
         }
 
         EnsurePanelTitle();
+        EnsureResourceCounter();
 
         if (closeButton != null)
         {
@@ -468,6 +471,38 @@ public class ShopController : MonoBehaviour
             EnsureButtonLabel(closeButton, "Close", 36, Color.white);
             closeRect.SetAsLastSibling();
         }
+    }
+
+    private void EnsureResourceCounter()
+    {
+        if (resourceAmountLabel == null)
+        {
+            Transform existing = shopPanel.transform.Find("Resource Amount");
+            if (existing != null)
+            {
+                resourceAmountLabel = existing.GetComponent<Text>();
+            }
+        }
+
+        if (resourceAmountLabel == null)
+        {
+            resourceAmountLabel = CreateText("Resource Amount", shopPanel.GetComponent<RectTransform>(), "Materials: 0", 36, FontStyle.Bold, TextAnchor.MiddleRight);
+        }
+
+        RectTransform resourceRect = resourceAmountLabel.rectTransform;
+        resourceRect.anchorMin = new Vector2(1f, 1f);
+        resourceRect.anchorMax = new Vector2(1f, 1f);
+        resourceRect.pivot = new Vector2(1f, 1f);
+        resourceRect.anchoredPosition = new Vector2(-42f, -30f);
+        resourceRect.sizeDelta = new Vector2(340f, 60f);
+        resourceAmountLabel.font = runtimeFont;
+        resourceAmountLabel.fontSize = 36;
+        resourceAmountLabel.fontStyle = FontStyle.Bold;
+        resourceAmountLabel.alignment = TextAnchor.MiddleRight;
+        resourceAmountLabel.color = new Color(0.18f, 0.27f, 0.16f, 1f);
+        resourceAmountLabel.raycastTarget = false;
+
+        resourceAmountLabel.gameObject.SetActive(true);
     }
 
     private void EnsurePanelTitle()

@@ -88,6 +88,10 @@ public class QuestMenuController : MonoBehaviour
 
     private void CompleteCurrentQuest()
     {
+        int previousCategoryTotal = currentQuest.CategoryTotalProgression != null
+            ? currentQuest.CategoryTotalProgression.Value
+            : 0;
+
         if (currentQuest.CategoryTotalProgression != null)
         {
             currentQuest.CategoryTotalProgression.Add(currentQuest.ProgressionValue);
@@ -95,7 +99,7 @@ public class QuestMenuController : MonoBehaviour
 
         int categoryTotal = currentQuest.CategoryTotalProgression != null
             ? currentQuest.CategoryTotalProgression.Value
-            : 0;
+            : previousCategoryTotal + currentQuest.ProgressionValue;
 
         Debug.Log(
             $"Quest completed: {currentQuest.QuestText} " +
@@ -105,7 +109,7 @@ public class QuestMenuController : MonoBehaviour
 
         if (successHintText != null)
         {
-            successHintText.text = BuildSuccessHintText(currentQuest);
+            successHintText.text = BuildSuccessHintText(currentQuest, previousCategoryTotal, categoryTotal);
         }
 
         if (questButton != null)
@@ -192,26 +196,64 @@ public class QuestMenuController : MonoBehaviour
         }
     }
 
-    private static string BuildSuccessHintText(QuestDefinition quest)
+    private IEnumerable<string> BuildRewardMessages(QuestDefinition quest, int previousProgression, int newProgression)
+    {
+        foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            var provider = behaviour as IQuestRewardMessageProvider;
+            if (provider == null)
+            {
+                continue;
+            }
+
+            IEnumerable<string> messages = provider.BuildRewardMessages(quest, previousProgression, newProgression);
+            if (messages == null)
+            {
+                continue;
+            }
+
+            foreach (string message in messages)
+            {
+                yield return message;
+            }
+        }
+    }
+
+    private string BuildSuccessHintText(QuestDefinition quest, int previousProgression, int newProgression)
     {
         var builder = new StringBuilder();
         builder.AppendLine("Quest Complete!");
         builder.AppendLine();
 
-        if (quest.SuccessKnowledgeHints.Count == 0)
+        bool addedContent = false;
+        foreach (string rewardMessage in BuildRewardMessages(quest, previousProgression, newProgression))
         {
-            builder.AppendLine("No knowledge hint has been added yet.");
-        }
-        else
-        {
-            foreach (string hint in quest.SuccessKnowledgeHints)
+            if (!string.IsNullOrWhiteSpace(rewardMessage))
             {
-                if (!string.IsNullOrWhiteSpace(hint))
-                {
-                    builder.AppendLine(hint);
-                    builder.AppendLine();
-                }
+                builder.AppendLine(rewardMessage);
+                addedContent = true;
             }
+        }
+
+        if (addedContent)
+        {
+            builder.AppendLine();
+        }
+
+        foreach (string hint in quest.SuccessKnowledgeHints)
+        {
+            if (!string.IsNullOrWhiteSpace(hint))
+            {
+                builder.AppendLine(hint);
+                builder.AppendLine();
+                addedContent = true;
+            }
+        }
+
+        if (!addedContent)
+        {
+            builder.AppendLine("No reward details have been added yet.");
+            builder.AppendLine();
         }
 
         builder.Append("Tap to continue");

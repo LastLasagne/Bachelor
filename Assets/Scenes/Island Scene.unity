@@ -15998,7 +15998,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -42, y: -30}
-  m_SizeDelta: {x: 180, y: 60}
+  m_SizeDelta: {x: 340, y: 60}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &658312216
 MonoBehaviour:
@@ -16021,8 +16021,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 0}
-    m_FontSize: 40
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 36
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
@@ -16033,7 +16033,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 'Materials: 9700'
 --- !u!222 &658312217
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -39006,6 +39006,7 @@ MonoBehaviour:
     rewardType: 0
     materialAmount: 0
     specialItem: {fileID: 0}
+    rewardMessage: You cleared some trash from the island!
     trashObjects:
     - {fileID: 1625916057}
     - {fileID: 1191117205}
@@ -39033,21 +39034,25 @@ MonoBehaviour:
     rewardType: 1
     materialAmount: 10
     specialItem: {fileID: 0}
+    rewardMessage: You gathered {amount} materials.
     trashObjects: []
   - threshold: 3
     rewardType: 2
     materialAmount: 0
     specialItem: {fileID: 11400000, guid: c54e1f54c9e9448fb414617a8ea84370, type: 2}
+    rewardMessage: You found {item} in the trash.
     trashObjects: []
   - threshold: 4
     rewardType: 1
     materialAmount: 50
     specialItem: {fileID: 0}
+    rewardMessage: You gathered {amount} materials.
     trashObjects: []
   - threshold: 5
     rewardType: 0
     materialAmount: 0
     specialItem: {fileID: 0}
+    rewardMessage: The island gets tidier every day!
     trashObjects:
     - {fileID: 694259191}
     - {fileID: 1399057623}
@@ -39076,16 +39081,19 @@ MonoBehaviour:
     rewardType: 1
     materialAmount: 100
     specialItem: {fileID: 0}
+    rewardMessage: You gathered {amount} materials.
     trashObjects: []
   - threshold: 7
     rewardType: 1
     materialAmount: 500
     specialItem: {fileID: 0}
+    rewardMessage: You gathered {amount} materials.
     trashObjects: []
   - threshold: 8
     rewardType: 0
     materialAmount: 0
     specialItem: {fileID: 0}
+    rewardMessage: You cleared the island from trash!
     trashObjects:
     - {fileID: 1328672110}
     - {fileID: 1490929534}
@@ -39114,11 +39122,14 @@ MonoBehaviour:
     rewardType: 2
     materialAmount: 0
     specialItem: {fileID: 11400000, guid: f5e55246232d44559386de97091e589e, type: 2}
+    rewardMessage: You discovered {item} in the sand.
     trashObjects: []
   - threshold: 9
     rewardType: 1
     materialAmount: 1000
     specialItem: {fileID: 0}
+    rewardMessage: You recycled the islands trash for {amount} materials. Enough
+      to build a boat!
     trashObjects: []
 --- !u!1001 &1736471439
 PrefabInstance:
@@ -44457,6 +44468,17 @@ MonoBehaviour:
   - {fileID: 1006109398}
   - {fileID: 629782680}
   - {fileID: 1234897935}
+  rewardMessages:
+  - Oh look! A wild chicken!
+  - The forest is growing.
+  - The animals trust you will not eat them.
+  - Even pigs have become wild animals again.
+  - Thats how peaceful coexistence looks like.
+  - The forest sufferers under meat consumption.
+  - You see that cow? Fascinating and sensitive animals.
+  - The forest blooms in its natural form again!
+  - The island population is growing and growing.
+  - tbd
 --- !u!1 &1987434282
 GameObject:
   m_ObjectHideFlags: 0
