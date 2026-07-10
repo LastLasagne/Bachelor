@@ -183,7 +183,7 @@ public class ShopController : MonoBehaviour
         rowRect.anchorMin = new Vector2(0f, 1f);
         rowRect.anchorMax = new Vector2(1f, 1f);
         rowRect.pivot = new Vector2(0.5f, 1f);
-        rowRect.sizeDelta = new Vector2(0f, 300f);
+        rowRect.sizeDelta = new Vector2(0f, 250f);
 
         var image = row.AddComponent<Image>();
         image.color = new Color(0.46f, 0.72f, 0.47f, 1f);
@@ -192,35 +192,26 @@ public class ShopController : MonoBehaviour
         bool canAfford = CanAfford(offer);
         group.alpha = canAfford ? 1f : 0.42f;
 
-        GameObject iconObject = CreateUiObject("Icon", rowRect).gameObject;
-        var iconRect = iconObject.GetComponent<RectTransform>();
-        iconRect.anchorMin = new Vector2(0f, 0.5f);
-        iconRect.anchorMax = new Vector2(0f, 0.5f);
-        iconRect.pivot = new Vector2(0f, 0.5f);
-        iconRect.anchoredPosition = new Vector2(32f, 0f);
-        iconRect.sizeDelta = new Vector2(220f, 220f);
-        var iconImage = iconObject.AddComponent<Image>();
-        iconImage.color = offer.Item.Icon != null ? Color.white : new Color(0.76f, 0.83f, 0.68f, 1f);
-        iconImage.sprite = offer.Item.Icon;
-        iconImage.preserveAspect = true;
 
-        Text nameText = CreateText("Name", rowRect, offer.Item.ItemName, 48, FontStyle.Bold, TextAnchor.UpperLeft);
+        Text nameText = CreateText("Name", rowRect, offer.Item.ItemName, 42, FontStyle.Bold, TextAnchor.UpperLeft);
         var nameRect = nameText.rectTransform;
         nameRect.anchorMin = new Vector2(0f, 1f);
         nameRect.anchorMax = new Vector2(1f, 1f);
         nameRect.pivot = new Vector2(0f, 1f);
-        nameRect.anchoredPosition = new Vector2(282f, -36f);
-        nameRect.sizeDelta = new Vector2(-560f, 70f);
+        nameRect.anchoredPosition = new Vector2(34f, -28f);
+        nameRect.sizeDelta = new Vector2(-300f, 58f);
         nameText.color = Color.white;
+        ConfigureTextBestFit(nameText, 24, 42);
 
-        Text descriptionText = CreateText("Description", rowRect, offer.Item.Description, 30, FontStyle.Normal, TextAnchor.UpperLeft);
+        Text descriptionText = CreateText("Description", rowRect, offer.Item.Description, 28, FontStyle.Normal, TextAnchor.UpperLeft);
         var descriptionRect = descriptionText.rectTransform;
         descriptionRect.anchorMin = new Vector2(0f, 0f);
         descriptionRect.anchorMax = new Vector2(1f, 1f);
         descriptionRect.pivot = new Vector2(0f, 1f);
-        descriptionRect.anchoredPosition = new Vector2(282f, -124f);
-        descriptionRect.sizeDelta = new Vector2(-560f, -160f);
+        descriptionRect.anchoredPosition = new Vector2(34f, -96f);
+        descriptionRect.sizeDelta = new Vector2(-300f, -122f);
         descriptionText.color = new Color(0.95f, 0.98f, 0.91f, 1f);
+        ConfigureTextBestFit(descriptionText, 18, 28);
 
         Button priceButton = CreateButton("Price Tag", rowRect, $"{offer.Item.Cost}", new Color(0.96f, 0.66f, 0.24f, 0.92f), 44, Color.black);
         var priceRect = priceButton.GetComponent<RectTransform>();
@@ -228,7 +219,7 @@ public class ShopController : MonoBehaviour
         priceRect.anchorMax = new Vector2(1f, 0.5f);
         priceRect.pivot = new Vector2(1f, 0.5f);
         priceRect.anchoredPosition = new Vector2(-32f, 0f);
-        priceRect.sizeDelta = new Vector2(230f, 112f);
+        priceRect.sizeDelta = new Vector2(220f, 96f);
         priceButton.interactable = canAfford;
         priceButton.onClick.AddListener(() => TryPurchase(offer));
 
@@ -360,6 +351,7 @@ public class ShopController : MonoBehaviour
         {
             closeButton.onClick.RemoveListener(CloseShop);
             closeButton.onClick.AddListener(CloseShop);
+        ApplyShopPanelLayout();
             return;
         }
 
@@ -413,7 +405,7 @@ public class ShopController : MonoBehaviour
         var viewportRect = viewportObject.GetComponent<RectTransform>();
         viewportRect.anchorMin = new Vector2(0f, 0f);
         viewportRect.anchorMax = new Vector2(1f, 1f);
-        viewportRect.offsetMin = new Vector2(40f, 170f);
+        viewportRect.offsetMin = new Vector2(40f, 340f);
         viewportRect.offsetMax = new Vector2(-40f, -112f);
         var viewportImage = viewportObject.AddComponent<Image>();
         viewportImage.color = new Color(0.46f, 0.72f, 0.47f, 0.22f);
@@ -429,7 +421,7 @@ public class ShopController : MonoBehaviour
         itemContentRoot.sizeDelta = new Vector2(0f, 0f);
         var layout = contentObject.AddComponent<VerticalLayoutGroup>();
         layout.padding = new RectOffset(0, 0, 0, 0);
-        layout.spacing = 16f;
+        layout.spacing = 14f;
         layout.childControlWidth = true;
         layout.childControlHeight = false;
         layout.childForceExpandWidth = true;
@@ -444,6 +436,112 @@ public class ShopController : MonoBehaviour
         scrollRect.vertical = true;
         scrollRect.movementType = ScrollRect.MovementType.Elastic;
         scrollRect.scrollSensitivity = 42f;
+        ApplyShopPanelLayout();
+    }
+
+    private void ApplyShopPanelLayout()
+    {
+        if (shopPanel == null)
+        {
+            return;
+        }
+
+        RectTransform viewport = FindChildRect(shopPanel.transform, "Item Viewport");
+        if (viewport != null)
+        {
+            viewport.anchorMin = new Vector2(0f, 0f);
+            viewport.anchorMax = new Vector2(1f, 1f);
+            viewport.offsetMin = new Vector2(40f, 340f);
+            viewport.offsetMax = new Vector2(-40f, -112f);
+        }
+
+        EnsurePanelTitle();
+
+        if (closeButton != null)
+        {
+            RectTransform closeRect = closeButton.GetComponent<RectTransform>();
+            closeRect.anchorMin = new Vector2(0.30f, 0.04f);
+            closeRect.anchorMax = new Vector2(0.70f, 0.13f);
+            closeRect.pivot = new Vector2(0.5f, 0.5f);
+            closeRect.anchoredPosition = Vector2.zero;
+            closeRect.sizeDelta = Vector2.zero;
+            EnsureButtonLabel(closeButton, "Close", 36, Color.white);
+            closeRect.SetAsLastSibling();
+        }
+    }
+
+    private void EnsurePanelTitle()
+    {
+        Text titleText = null;
+        Transform existing = shopPanel.transform.Find("Title");
+        if (existing != null)
+        {
+            titleText = existing.GetComponent<Text>();
+        }
+
+        if (titleText == null)
+        {
+            titleText = CreateText("Title", shopPanel.GetComponent<RectTransform>(), "SHOP", 48, FontStyle.Bold, TextAnchor.MiddleLeft);
+        }
+
+        RectTransform titleRect = titleText.rectTransform;
+        titleRect.anchorMin = new Vector2(0f, 1f);
+        titleRect.anchorMax = new Vector2(1f, 1f);
+        titleRect.pivot = new Vector2(0f, 1f);
+        titleRect.anchoredPosition = new Vector2(40f, -24f);
+        titleRect.sizeDelta = new Vector2(-300f, 72f);
+        titleText.text = "SHOP";
+        titleText.font = runtimeFont;
+        titleText.fontSize = 48;
+        titleText.fontStyle = FontStyle.Bold;
+        titleText.alignment = TextAnchor.MiddleLeft;
+        titleText.color = new Color(0.18f, 0.27f, 0.16f, 1f);
+        titleText.raycastTarget = false;
+        titleText.gameObject.SetActive(true);
+    }
+
+    private static RectTransform FindChildRect(Transform root, string childName)
+    {
+        foreach (RectTransform rect in root.GetComponentsInChildren<RectTransform>(true))
+        {
+            if (rect.name == childName)
+            {
+                return rect;
+            }
+        }
+
+        return null;
+    }
+
+    private static void ConfigureTextBestFit(Text text, int minSize, int maxSize)
+    {
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = minSize;
+        text.resizeTextMaxSize = maxSize;
+    }
+
+    private void EnsureButtonLabel(Button button, string label, int fontSize, Color labelColor)
+    {
+        Text labelText = button.GetComponentInChildren<Text>(true);
+        if (labelText == null)
+        {
+            labelText = CreateText("Label", button.GetComponent<RectTransform>(), label, fontSize, FontStyle.Bold, TextAnchor.MiddleCenter);
+        }
+
+        labelText.text = label;
+        labelText.font = runtimeFont;
+        labelText.fontSize = fontSize;
+        labelText.fontStyle = FontStyle.Bold;
+        labelText.alignment = TextAnchor.MiddleCenter;
+        labelText.color = labelColor;
+        labelText.raycastTarget = false;
+        labelText.gameObject.SetActive(true);
+        labelText.rectTransform.anchorMin = Vector2.zero;
+        labelText.rectTransform.anchorMax = Vector2.one;
+        labelText.rectTransform.offsetMin = Vector2.zero;
+        labelText.rectTransform.offsetMax = Vector2.zero;
     }
 
     private Text CreateText(string objectName, RectTransform parent, string text, int fontSize, FontStyle fontStyle, TextAnchor alignment)

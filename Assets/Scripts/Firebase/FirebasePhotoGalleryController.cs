@@ -43,9 +43,11 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     private bool isLoading;
     private GalleryPhotoEntry currentPhoto;
     private bool registeredAsOpenHubMenu;
+    private Font runtimeFont;
 
     private void Awake()
     {
+        runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
         ValidateGalleryReferences();
         SetPanelVisible(false);
     }
@@ -495,7 +497,135 @@ public class FirebasePhotoGalleryController : MonoBehaviour
             Debug.LogError("Photo gallery UI references are missing. Assign the scene UI fields on FirebasePhotoGalleryController.", this);
         }
 
+        else
+        {
+            ApplyGalleryStyle();
+        }
+
         return hasRequiredReferences;
+    }
+
+    private void ApplyGalleryStyle()
+    {
+        RectTransform panelRect = galleryPanel.GetComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0.08f, 0.08f);
+        panelRect.anchorMax = new Vector2(0.92f, 0.92f);
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        Image panelImage = galleryPanel.GetComponent<Image>() ?? galleryPanel.AddComponent<Image>();
+        panelImage.color = new Color(0.96f, 0.91f, 0.78f, 0.99f);
+
+        Text titleText = FindOrCreatePanelText("Title", "GALLERY", 48, FontStyle.Bold, TextAnchor.MiddleLeft);
+        RectTransform titleRect = titleText.rectTransform;
+        titleRect.anchorMin = new Vector2(0f, 1f);
+        titleRect.anchorMax = new Vector2(1f, 1f);
+        titleRect.pivot = new Vector2(0f, 1f);
+        titleRect.anchoredPosition = new Vector2(40f, -24f);
+        titleRect.sizeDelta = new Vector2(-300f, 72f);
+        titleText.color = new Color(0.18f, 0.27f, 0.16f, 1f);
+
+        RectTransform counterRect = counterText.rectTransform;
+        counterRect.anchorMin = new Vector2(1f, 1f);
+        counterRect.anchorMax = new Vector2(1f, 1f);
+        counterRect.pivot = new Vector2(1f, 1f);
+        counterRect.anchoredPosition = new Vector2(-42f, -30f);
+        counterRect.sizeDelta = new Vector2(300f, 60f);
+        ConfigureText(counterText, 32, FontStyle.Bold, TextAnchor.MiddleRight, new Color(0.18f, 0.27f, 0.16f, 1f));
+
+        RectTransform photoButtonRect = photoButton.GetComponent<RectTransform>();
+        photoButtonRect.anchorMin = new Vector2(0.06f, 0.30f);
+        photoButtonRect.anchorMax = new Vector2(0.94f, 0.84f);
+        photoButtonRect.offsetMin = Vector2.zero;
+        photoButtonRect.offsetMax = Vector2.zero;
+        Image photoButtonImage = photoButton.GetComponent<Image>() ?? photoButton.gameObject.AddComponent<Image>();
+        photoButtonImage.color = new Color(0.46f, 0.72f, 0.47f, 1f);
+
+        RectTransform photoRect = photoImage.rectTransform;
+        photoRect.anchorMin = Vector2.zero;
+        photoRect.anchorMax = Vector2.one;
+        photoRect.offsetMin = new Vector2(24f, 18f);
+        photoRect.offsetMax = new Vector2(-24f, -18f);
+        photoImage.color = Color.white;
+
+        RectTransform statusRect = statusText.rectTransform;
+        statusRect.anchorMin = new Vector2(0.10f, 0.20f);
+        statusRect.anchorMax = new Vector2(0.90f, 0.28f);
+        statusRect.offsetMin = Vector2.zero;
+        statusRect.offsetMax = Vector2.zero;
+        ConfigureText(statusText, 30, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(0.18f, 0.27f, 0.16f, 1f));
+
+        StyleButton(thumbsUpButton, null, new Color(0.46f, 0.72f, 0.47f, 1f), 30, Color.white, new Vector2(0.14f, 0.14f), new Vector2(0.42f, 0.22f));
+        StyleButton(thumbsDownButton, null, new Color(0.9f, 0.45f, 0.36f, 1f), 30, Color.white, new Vector2(0.58f, 0.14f), new Vector2(0.86f, 0.22f));
+        StyleButton(closeButton, "Close", new Color(0.9f, 0.45f, 0.36f, 1f), 36, Color.white, new Vector2(0.30f, 0.04f), new Vector2(0.70f, 0.12f));
+        closeButton.transform.SetAsLastSibling();
+    }
+
+    private Text FindOrCreatePanelText(string objectName, string text, int fontSize, FontStyle fontStyle, TextAnchor alignment)
+    {
+        Transform existing = galleryPanel.transform.Find(objectName);
+        Text textComponent = existing != null ? existing.GetComponent<Text>() : null;
+        if (textComponent == null)
+        {
+            GameObject textObject = new GameObject(objectName, typeof(RectTransform));
+            textObject.transform.SetParent(galleryPanel.transform, false);
+            textComponent = textObject.AddComponent<Text>();
+        }
+
+        textComponent.text = text;
+        ConfigureText(textComponent, fontSize, fontStyle, alignment, Color.white);
+        textComponent.raycastTarget = false;
+        textComponent.gameObject.SetActive(true);
+        return textComponent;
+    }
+
+    private void StyleButton(Button button, string labelOverride, Color backgroundColor, int fontSize, Color labelColor, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        RectTransform buttonRect = button.GetComponent<RectTransform>();
+        buttonRect.anchorMin = anchorMin;
+        buttonRect.anchorMax = anchorMax;
+        buttonRect.offsetMin = Vector2.zero;
+        buttonRect.offsetMax = Vector2.zero;
+
+        Image buttonImage = button.GetComponent<Image>() ?? button.gameObject.AddComponent<Image>();
+        buttonImage.color = backgroundColor;
+
+        Text labelText = button.GetComponentInChildren<Text>(true);
+        if (labelText == null && !string.IsNullOrEmpty(labelOverride))
+        {
+            GameObject labelObject = new GameObject("Label", typeof(RectTransform));
+            labelObject.transform.SetParent(button.transform, false);
+            labelText = labelObject.AddComponent<Text>();
+        }
+
+        if (labelText == null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(labelOverride))
+        {
+            labelText.text = labelOverride;
+        }
+
+        ConfigureText(labelText, fontSize, FontStyle.Bold, TextAnchor.MiddleCenter, labelColor);
+        labelText.raycastTarget = false;
+        labelText.gameObject.SetActive(true);
+        labelText.rectTransform.anchorMin = Vector2.zero;
+        labelText.rectTransform.anchorMax = Vector2.one;
+        labelText.rectTransform.offsetMin = Vector2.zero;
+        labelText.rectTransform.offsetMax = Vector2.zero;
+    }
+
+    private void ConfigureText(Text text, int fontSize, FontStyle fontStyle, TextAnchor alignment, Color color)
+    {
+        text.font = runtimeFont;
+        text.fontSize = fontSize;
+        text.fontStyle = fontStyle;
+        text.alignment = alignment;
+        text.color = color;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Truncate;
     }
 
     private void SetPanelVisible(bool visible)
