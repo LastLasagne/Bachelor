@@ -122,7 +122,10 @@ public sealed class GameProgressManager : MonoBehaviour
     }
 
     public int TrashProgression => trash != null ? trash.Value : 0;
+    public int FoodProgression => food != null ? food.Value : 0;
     public int GalleryProgression => gallery != null ? gallery.Value : 0;
+    public bool HasSeenOpeningStory => save != null && save.Data.openingStorySeen;
+    public bool AreAllInventorStoriesRead => save != null && save.Data.inventorStoryOneRead && save.Data.inventorStoryTwoRead;
 
     public int GalleryViewsToday => save != null ? save.Data.galleryViewsToday : 0;
     public bool CanViewGalleryPhoto(int dailyLimit) => save != null && save.Data.galleryViewsToday < Mathf.Max(1, dailyLimit);
@@ -132,6 +135,17 @@ public sealed class GameProgressManager : MonoBehaviour
         if (save == null) return;
         save.Data.galleryViewsToday++;
         save.Commit();
+    }
+    public void MarkOpeningStorySeen()
+    {
+        if (save == null || save.Data.openingStorySeen) return;
+        save.Data.openingStorySeen = true;
+        save.Commit();
+    }
+
+    public bool HasPurchasedItem(string itemId)
+    {
+        return save != null && !string.IsNullOrEmpty(itemId) && save.Data.purchasedShopItemIds.Contains(itemId);
     }
     public bool IsInventorStoryRead(int storyIndex)
     {

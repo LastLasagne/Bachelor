@@ -45,6 +45,7 @@ public class GameProgressSaveData
 
     public bool inventorStoryOneRead;
     public bool inventorStoryTwoRead;
+    public bool openingStorySeen;
 
     public int debugDayOffset;
 }
