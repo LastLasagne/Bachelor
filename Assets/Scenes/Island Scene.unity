@@ -30851,7 +30851,7 @@ MonoBehaviour:
   cameraTransform: {fileID: 77788239}
   allowKeyboardFallback: 1
   moveSpeed: 7
-  acceleration: 25
+  acceleration: 50
   rotationSpeed: 540
   gravity: -24
   groundedStickForce: -2
