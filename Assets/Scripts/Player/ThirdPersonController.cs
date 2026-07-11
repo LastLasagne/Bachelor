@@ -15,6 +15,12 @@ public class ThirdPersonController : MonoBehaviour
     [SerializeField] private float gravity = -24f;
     [SerializeField] private float groundedStickForce = -2f;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private float animationDampTime = 0.12f;
+
+    private static readonly int MoveSpeedHash = Animator.StringToHash("MoveSpeed");
+
     private CharacterController controller;
     private Vector3 currentVelocity;
     private float verticalVelocity;
@@ -39,6 +45,16 @@ public class ThirdPersonController : MonoBehaviour
         {
             cameraTransform = Camera.main.transform;
         }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator != null)
+        {
+            animator.applyRootMotion = false;
+        }
     }
 
     private void Update()
@@ -51,6 +67,11 @@ public class ThirdPersonController : MonoBehaviour
             currentVelocity,
             targetVelocity,
             acceleration * Time.deltaTime);
+
+        if (animator != null)
+        {
+            animator.SetFloat(MoveSpeedHash, desiredMove.magnitude, animationDampTime, Time.deltaTime);
+        }
 
         if (desiredMove.sqrMagnitude > 0.001f)
         {
