@@ -108,7 +108,11 @@ public sealed class GameProgressManager : MonoBehaviour
         if (shop != null) shop.ItemPurchased += OnItemPurchased;
     }
 
-    private void OnStateChanged(int _) => CaptureAndSave();
+    private void OnStateChanged(int _)
+    {
+        CaptureAndSave();
+        FirebaseStudyMetricsTracker.Instance?.RecordProgression(TrashProgression, FoodProgression, GalleryProgression);
+    }
     private void OnItemPurchased(ShopItemDefinition _) => CaptureAndSave();
 
     public QuestDefinition GetActiveRepeatableQuest(QuestCategory category)
@@ -221,6 +225,7 @@ public sealed class GameProgressManager : MonoBehaviour
         }
 
         CaptureAndSave();
+        FirebaseStudyMetricsTracker.Instance?.RecordProgression(TrashProgression, FoodProgression, GalleryProgression);
     }
 
     private void RotateQuestsIfNeeded()

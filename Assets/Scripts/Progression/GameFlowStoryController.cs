@@ -64,6 +64,15 @@ public class GameFlowStoryController : MonoBehaviour
     {
         if (AreEndingConditionsMet())
         {
+            GameProgressManager progress = GameProgressManager.Instance;
+            if (progress != null)
+            {
+                FirebaseStudyMetricsTracker.Instance?.RecordGameFinished(
+                    progress.TrashProgression,
+                    progress.FoodProgression,
+                    progress.GalleryProgression);
+            }
+
             endingShown = true;
             ShowBlackScreen(endingStoryText, allowClose: false);
         }

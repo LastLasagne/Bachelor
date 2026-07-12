@@ -5413,6 +5413,8 @@ MonoBehaviour:
   dailyViewLimit: 4
   dailyLimitMessage: You have viewed all available pictures for today. Come back
     tomorrow.
+  internetRequiredLoadMessage: Internet connection required to load pictures.
+  internetRequiredReactionMessage: Internet connection required to save your reaction.
   landscapePhotoRotationDegrees: -90
   galleryPanel: {fileID: 117996188}
   photoImage: {fileID: 659832243}

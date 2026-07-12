@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
+using Firebase.Analytics;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
@@ -207,6 +208,7 @@ public class QuestMenuController : MonoBehaviour
             $"Progression +{currentQuest.ProgressionValue}. " +
             $"{currentQuest.Category} total progression: {categoryTotal}",
             this);
+        LogQuestCompletedEvent(currentQuest, previousCategoryTotal, categoryTotal);
 
         if (successHintText != null)
         {
@@ -221,6 +223,32 @@ public class QuestMenuController : MonoBehaviour
         RefreshQuestDisplay();
         successHintPanel?.SetActive(true);
     }
+    private void LogQuestCompletedEvent(QuestDefinition quest, int previousProgression, int newProgression)
+    {
+        if (quest == null)
+        {
+            return;
+        }
+
+        try
+        {
+            int amountDue = GameProgressManager.Instance != null ? GameProgressManager.Instance.GetAmountDue(quest) : quest.AmountDue;
+            FirebaseAnalytics.LogEvent(
+                "quest_completed",
+                new Parameter("quest_id", quest.name),
+                new Parameter("quest_category", quest.Category.ToString().ToLowerInvariant()),
+                new Parameter("quest_frequency", quest.Frequency.ToString().ToLowerInvariant()),
+                new Parameter("amount_due", amountDue),
+                new Parameter("progression_value", quest.ProgressionValue),
+                new Parameter("previous_progression", previousProgression),
+                new Parameter("new_progression", newProgression));
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogWarning($"Could not log quest_completed analytics event: {exception.Message}", this);
+        }
+    }
+
 
     // Invoked by SOAP's native EventListenerNoParam.
     public void HandleSuccessHintDismissRequested()
@@ -340,3 +368,5 @@ public class QuestMenuController : MonoBehaviour
         return builder.ToString();
     }
 }
+
+

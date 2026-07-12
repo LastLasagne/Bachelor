@@ -24,6 +24,8 @@ public class FirebasePhotoGalleryController : MonoBehaviour
     [SerializeField, Min(1)] private int progressionValuePerPhoto = 1;
     [SerializeField, Min(1)] private int dailyViewLimit = 4;
     [SerializeField] private string dailyLimitMessage = "You have viewed all available pictures for today. Come back tomorrow.";
+    [SerializeField] private string internetRequiredLoadMessage = "Internet connection required to load pictures.";
+    [SerializeField] private string internetRequiredReactionMessage = "Internet connection required to save your reaction.";
 
     [Header("Photo Display")]
     [SerializeField] private float landscapePhotoRotationDegrees = 90f;
@@ -169,6 +171,13 @@ public class FirebasePhotoGalleryController : MonoBehaviour
             return;
         }
 
+        if (!HasInternetConnection())
+        {
+            SetStatus(internetRequiredReactionMessage);
+            SetReactionButtonsInteractable(true);
+            return;
+        }
+
         isLoading = true;
         SetReactionButtonsInteractable(false);
         SetStatus("Saving reaction...");
@@ -189,7 +198,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         catch (Exception exception)
         {
             Debug.LogError($"Photo gallery failed to save reaction: {exception}", this);
-            SetStatus("Could not save reaction.");
+            SetStatus(IsLikelyNetworkException(exception) ? internetRequiredReactionMessage : "Could not save reaction.");
             SetReactionButtonsInteractable(true);
             return;
         }
@@ -219,6 +228,14 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         currentPhoto = default;
         SetStatus("Loading picture...");
         SetReactionButtonsInteractable(false);
+
+        if (!HasInternetConnection())
+        {
+            SetPhotoTexture(null);
+            SetStatus(internetRequiredLoadMessage);
+            isLoading = false;
+            return;
+        }
 
         try
         {
@@ -254,7 +271,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         {
             Debug.LogError($"Photo gallery failed to load a picture: {exception}", this);
             SetPhotoTexture(null);
-            SetStatus("Could not load a picture.");
+            SetStatus(IsLikelyNetworkException(exception) ? internetRequiredLoadMessage : "Could not load a picture.");
         }
         finally
         {
@@ -262,6 +279,24 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         }
     }
 
+    private bool HasInternetConnection()
+    {
+        return Application.internetReachability != NetworkReachability.NotReachable;
+    }
+
+    private bool IsLikelyNetworkException(Exception exception)
+    {
+        if (!HasInternetConnection())
+        {
+            return true;
+        }
+
+        string message = exception?.ToString() ?? string.Empty;
+        return message.IndexOf("network", StringComparison.OrdinalIgnoreCase) >= 0
+            || message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0
+            || message.IndexOf("unreachable", StringComparison.OrdinalIgnoreCase) >= 0
+            || message.IndexOf("connection", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
     private async Task RefreshPhotoListAsync()
     {
         photoEntries.Clear();
@@ -742,6 +777,3 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         public bool IsValid => !string.IsNullOrWhiteSpace(DocumentId) && !string.IsNullOrWhiteSpace(StoragePath);
     }
 }
-
-
-
