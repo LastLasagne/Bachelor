@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -34,7 +34,7 @@ public class FirebaseQuestPhotoUploader : MonoBehaviour
     }
 #endif
 
-    public async Task UploadPhotoAsync(string localPhotoPath, string questId, string hubId)
+    public async Task UploadPhotoAsync(string localPhotoPath, string questId, string hubId, string questText = "")
     {
         if (string.IsNullOrWhiteSpace(localPhotoPath))
         {
@@ -93,6 +93,7 @@ public class FirebaseQuestPhotoUploader : MonoBehaviour
             {
                 { "photoId", photoId },
                 { "questId", safeQuestId },
+                { "questText", questText?.Trim() ?? string.Empty },
                 { "hubId", safeHubId },
                 { "uploaderId", user.UserId },
                 { "storagePath", storagePath },

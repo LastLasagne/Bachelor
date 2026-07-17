@@ -29,6 +29,8 @@ public class FirebasePhotoGalleryController : MonoBehaviour
 
     [Header("Photo Display")]
     [SerializeField] private float landscapePhotoRotationDegrees = 90f;
+    [SerializeField, TextArea(2, 4)] private string questContextPrefix = "Another person reported they completed this quest:";
+    [SerializeField] private string missingQuestContext = "Quest details are unavailable for this older picture.";
 
     [Header("Scene UI")]
     [SerializeField] private GameObject galleryPanel;
@@ -259,7 +261,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
                 }
 
                 SetPhotoTexture(texture);
-                SetStatus("React to this picture.");
+                SetStatus(BuildQuestContextMessage(currentPhoto.QuestText));
                 SetReactionButtonsInteractable(true);
                 return;
             }
@@ -326,12 +328,39 @@ public class FirebasePhotoGalleryController : MonoBehaviour
                 continue;
             }
 
-            photoEntries.Add(new GalleryPhotoEntry(document.Id, storagePath));
+            photoEntries.Add(new GalleryPhotoEntry(document.Id, storagePath, ResolveQuestText(document)));
         }
 
         ShuffleStorageQueue();
     }
 
+    private static string ResolveQuestText(DocumentSnapshot document)
+    {
+        if (document.TryGetValue("questText", out string storedQuestText) && !string.IsNullOrWhiteSpace(storedQuestText))
+        {
+            return storedQuestText.Trim();
+        }
+
+        if (document.TryGetValue("questId", out string questId) && !string.IsNullOrWhiteSpace(questId))
+        {
+            QuestDefinition[] quests = Resources.LoadAll<QuestDefinition>("Quests");
+            foreach (QuestDefinition quest in quests)
+            {
+                if (quest != null && string.Equals(quest.name, questId, StringComparison.Ordinal))
+                {
+                    return quest.QuestText;
+                }
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private string BuildQuestContextMessage(string questText)
+    {
+        string resolvedQuestText = string.IsNullOrWhiteSpace(questText) ? missingQuestContext : questText.Trim();
+        return $"{questContextPrefix}\n{resolvedQuestText}";
+    }
     private void ShuffleStorageQueue()
     {
         shuffledPhotoQueue.Clear();
@@ -586,8 +615,8 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         ConfigureText(counterText, 32, FontStyle.Bold, TextAnchor.MiddleRight, new Color(0.18f, 0.27f, 0.16f, 1f));
 
         RectTransform photoButtonRect = photoButton.GetComponent<RectTransform>();
-        photoButtonRect.anchorMin = new Vector2(0.06f, 0.30f);
-        photoButtonRect.anchorMax = new Vector2(0.94f, 0.84f);
+        photoButtonRect.anchorMin = new Vector2(0.06f, 0.29f);
+        photoButtonRect.anchorMax = new Vector2(0.94f, 0.79f);
         photoButtonRect.offsetMin = Vector2.zero;
         photoButtonRect.offsetMax = Vector2.zero;
         Image photoButtonImage = photoButton.GetComponent<Image>() ?? photoButton.gameObject.AddComponent<Image>();
@@ -601,15 +630,15 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         photoImage.color = Color.white;
 
         RectTransform statusRect = statusText.rectTransform;
-        statusRect.anchorMin = new Vector2(0.10f, 0.20f);
-        statusRect.anchorMax = new Vector2(0.90f, 0.28f);
+        statusRect.anchorMin = new Vector2(0.08f, 0.80f);
+        statusRect.anchorMax = new Vector2(0.92f, 0.91f);
         statusRect.offsetMin = Vector2.zero;
         statusRect.offsetMax = Vector2.zero;
-        ConfigureText(statusText, 30, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(0.18f, 0.27f, 0.16f, 1f));
+        ConfigureText(statusText, 28, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(0.18f, 0.27f, 0.16f, 1f));
 
-        StyleButton(thumbsUpButton, null, new Color(0.46f, 0.72f, 0.47f, 1f), 30, Color.white, new Vector2(0.14f, 0.14f), new Vector2(0.42f, 0.22f));
-        StyleButton(thumbsDownButton, null, new Color(0.9f, 0.45f, 0.36f, 1f), 30, Color.white, new Vector2(0.58f, 0.14f), new Vector2(0.86f, 0.22f));
-        StyleButton(closeButton, "Close", new Color(0.9f, 0.45f, 0.36f, 1f), 36, Color.white, new Vector2(0.30f, 0.04f), new Vector2(0.70f, 0.12f));
+        StyleButton(thumbsUpButton, null, new Color(0.46f, 0.72f, 0.47f, 1f), 34, Color.white, new Vector2(0.07f, 0.13f), new Vector2(0.47f, 0.26f), true);
+        StyleButton(thumbsDownButton, null, new Color(0.9f, 0.45f, 0.36f, 1f), 34, Color.white, new Vector2(0.53f, 0.13f), new Vector2(0.93f, 0.26f), true);
+        StyleButton(closeButton, "Close", new Color(0.9f, 0.45f, 0.36f, 1f), 34, Color.white, new Vector2(0.32f, 0.03f), new Vector2(0.68f, 0.105f));
         closeButton.transform.SetAsLastSibling();
     }
 
@@ -631,7 +660,7 @@ public class FirebasePhotoGalleryController : MonoBehaviour
         return textComponent;
     }
 
-    private void StyleButton(Button button, string labelOverride, Color backgroundColor, int fontSize, Color labelColor, Vector2 anchorMin, Vector2 anchorMax)
+    private void StyleButton(Button button, string labelOverride, Color backgroundColor, int fontSize, Color labelColor, Vector2 anchorMin, Vector2 anchorMax, bool rounded = false)
     {
         RectTransform buttonRect = button.GetComponent<RectTransform>();
         buttonRect.anchorMin = anchorMin;
@@ -641,6 +670,15 @@ public class FirebasePhotoGalleryController : MonoBehaviour
 
         Image buttonImage = button.GetComponent<Image>() ?? button.gameObject.AddComponent<Image>();
         buttonImage.color = backgroundColor;
+        if (rounded)
+        {
+            Sprite roundedSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            if (roundedSprite != null)
+            {
+                buttonImage.sprite = roundedSprite;
+                buttonImage.type = Image.Type.Sliced;
+            }
+        }
 
         Text labelText = button.GetComponentInChildren<Text>(true);
         if (labelText == null && !string.IsNullOrEmpty(labelOverride))
@@ -766,14 +804,16 @@ public class FirebasePhotoGalleryController : MonoBehaviour
 
     private readonly struct GalleryPhotoEntry
     {
-        public GalleryPhotoEntry(string documentId, string storagePath)
+        public GalleryPhotoEntry(string documentId, string storagePath, string questText)
         {
             DocumentId = documentId;
             StoragePath = storagePath;
+            QuestText = questText;
         }
 
         public string DocumentId { get; }
         public string StoragePath { get; }
+        public string QuestText { get; }
         public bool IsValid => !string.IsNullOrWhiteSpace(DocumentId) && !string.IsNullOrWhiteSpace(StoragePath);
     }
 }

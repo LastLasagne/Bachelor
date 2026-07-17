@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Text;
 using Firebase.Analytics;
 using UnityEngine;
@@ -158,7 +158,7 @@ public class QuestMenuController : MonoBehaviour
         if (manager == null || entry == null || entry.Quest == null) return;
         bool completed = manager.IsCompletedToday(entry.Quest);
         if (entry.Description != null)
-            entry.Description.text = completed ? completedQuestMessage : $"{entry.Quest.Frequency}: {entry.Quest.QuestText}";
+            entry.Description.text = completed ? completedQuestMessage : entry.Quest.QuestText;
         if (entry.Progress != null)
             entry.Progress.text = completed ? string.Empty : $"{manager.GetProgress(entry.Quest)}/{manager.GetAmountDue(entry.Quest)}";
         if (entry.Button != null) entry.Button.interactable = !completed;

@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using DeadMosquito.AndroidGoodies;
 using Obvious.Soap;
 using UnityEngine;
@@ -11,6 +11,7 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
     [SerializeField] private ScriptableEventNoParam photoCaptured;
     [SerializeField] private ScriptableEventNoParam photoCaptureCancelled;
     [SerializeField] private FirebaseQuestPhotoUploader photoUploader;
+    [SerializeField] private QuestMenuController questMenuController;
     [SerializeField] private string firebaseQuestId = "unknown_quest";
     [SerializeField] private string firebaseHubId = "quest_hub";
 
@@ -178,7 +179,16 @@ public class QuestCameraCaptureCoordinator : MonoBehaviour
             photoUploader = gameObject.AddComponent<FirebaseQuestPhotoUploader>();
         }
 
-        await photoUploader.UploadPhotoAsync(LastCapturedPhotoPath, firebaseQuestId, firebaseHubId);
+        if (questMenuController == null)
+        {
+            questMenuController = FindFirstObjectByType<QuestMenuController>(FindObjectsInactive.Include);
+        }
+
+        QuestDefinition targetedQuest = questMenuController != null ? questMenuController.CurrentQuest : null;
+        string questId = targetedQuest != null ? targetedQuest.name : firebaseQuestId;
+        string questText = targetedQuest != null ? targetedQuest.QuestText : string.Empty;
+        string hubId = targetedQuest != null ? targetedQuest.Category.ToString().ToLowerInvariant() : firebaseHubId;
+        await photoUploader.UploadPhotoAsync(LastCapturedPhotoPath, questId, hubId, questText);
     }
 
     private void EnsureUploadProgressPanel()
